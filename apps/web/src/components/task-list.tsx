@@ -87,7 +87,43 @@ function TaskGroup({
 
       <CollapsibleContent>
         <div className="overflow-hidden rounded-lg border">
-          <div className="overflow-x-auto">
+          <ul className="divide-y md:hidden">
+            {tasks.map((task) => (
+              <li key={task.id}>
+                <Link
+                  href={`/tasks/${task.id}`}
+                  className="hover:bg-muted/40 flex flex-col gap-2 px-4 py-3 transition-colors"
+                >
+                  <span className="text-sm font-medium">{task.title}</span>
+
+                  <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    {fields.priority && (
+                      <PriorityBadge priority={task.priority} />
+                    )}
+                    {fields.status && (
+                      <span className="text-muted-foreground text-xs">
+                        {STATUS_LABEL[task.status]}
+                      </span>
+                    )}
+                    {fields.dueDate && task.dueDate && (
+                      <span className="text-muted-foreground text-xs tabular-nums">
+                        {formatDueDate(task.dueDate)}
+                      </span>
+                    )}
+                    {fields.members && task.assignees.length > 0 && (
+                      <MemberAvatars members={task.assignees} />
+                    )}
+                  </span>
+
+                  {fields.labels && task.labels.length > 0 && (
+                    <LabelChips labels={task.labels} max={3} />
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">

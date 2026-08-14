@@ -14,7 +14,8 @@ export function SettingsRow({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-4 px-4 py-3",
+        "flex flex-col items-start gap-2 px-4 py-3",
+        "sm:flex-row sm:items-center sm:justify-between sm:gap-4",
         "border-b last:border-b-0",
         className,
       )}
@@ -25,7 +26,9 @@ export function SettingsRow({
           <span className="text-muted-foreground text-xs">{description}</span>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-2">{children}</div>
+      <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+        {children}
+      </div>
     </div>
   );
 }

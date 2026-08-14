@@ -195,7 +195,27 @@ export default function TaskDetailPage({
           <section className="flex flex-col gap-2">
             <h2 className="text-sm font-medium">Subtasks</h2>
             <div className="overflow-hidden rounded-lg border">
-              <div className="overflow-x-auto">
+              <ul className="divide-y md:hidden">
+                {task.subtasks.map((subtask) => (
+                  <li
+                    key={subtask.id}
+                    className="flex flex-col gap-2 px-4 py-3"
+                  >
+                    <span className="text-sm font-medium">{subtask.title}</span>
+                    <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      <PriorityBadge priority={subtask.priority} />
+                      {subtask.dueDate && (
+                        <span className="text-muted-foreground text-xs tabular-nums">
+                          {formatDueDate(subtask.dueDate)}
+                        </span>
+                      )}
+                      <MemberAvatars members={subtask.assignees} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50 hover:bg-muted/50">

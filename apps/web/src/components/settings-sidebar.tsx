@@ -22,7 +22,12 @@ export function SettingsSidebar() {
   const items = NAV.filter((item) => item.label.toLowerCase().includes(term));
 
   return (
-    <aside className="bg-sidebar flex w-64 shrink-0 flex-col gap-3 border-r p-3">
+    <aside
+      className={cn(
+        "bg-sidebar flex shrink-0 flex-col gap-3 p-3",
+        "w-full border-b md:w-64 md:border-r md:border-b-0",
+      )}
+    >
       <Link
         href="/tasks"
         className={cn(
@@ -34,7 +39,7 @@ export function SettingsSidebar() {
         Back to app
       </Link>
 
-      <div className="relative">
+      <div className="relative hidden md:block">
         <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
         <Input
           value={query}
@@ -45,7 +50,7 @@ export function SettingsSidebar() {
         />
       </div>
 
-      <nav className="flex flex-col gap-0.5">
+      <nav className="flex flex-row gap-1 overflow-x-auto md:flex-col md:gap-0.5">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -56,7 +61,7 @@ export function SettingsSidebar() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                "flex shrink-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                   : "hover:bg-sidebar-accent/60",

@@ -158,8 +158,8 @@ export function TasksWorkspace({
   const filtered = countActiveFilters(filters) + query.trim().length > 0;
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
-      <div className="flex items-center justify-between gap-2">
+    <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         {searchOpen ? (
           <div className="relative max-w-md flex-1">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />

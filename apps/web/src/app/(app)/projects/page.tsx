@@ -96,7 +96,36 @@ export default function ProjectsPage() {
           <Skeleton className="h-48 w-full rounded-lg" />
         ) : (
           <div className="overflow-hidden rounded-lg border">
-            <div className="overflow-x-auto">
+            <ul className="divide-y md:hidden">
+              {projects.map((project) => (
+                <li key={project.id}>
+                  <Link
+                    href={`/projects/${project.id}`}
+                    className="hover:bg-muted/40 flex flex-col gap-2 px-4 py-3 transition-colors"
+                  >
+                    <span className="text-sm font-medium">{project.name}</span>
+                    <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      <PriorityBadge priority={project.priority} />
+                      {project.dueDate && (
+                        <span className="text-muted-foreground text-xs tabular-nums">
+                          {formatDueDate(project.dueDate)}
+                        </span>
+                      )}
+                      {project.lead && (
+                        <span className="flex items-center gap-1.5">
+                          <UserAvatar user={project.lead} />
+                          <span className="text-muted-foreground text-xs">
+                            {project.lead.name}
+                          </span>
+                        </span>
+                      )}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
