@@ -1,0 +1,219 @@
+"use client";
+
+import {
+  CalendarDays,
+  Circle,
+  Plus,
+  Settings2,
+  SignalHigh,
+  Tag,
+  UserRound,
+  Users,
+} from "lucide-react";
+
+import { PriorityIcon } from "@/components/priority-badge";
+import { UserAvatar } from "@/components/user-avatar";
+import { formatDueDate } from "@/components/task-meta";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import {
+  PRIORITIES,
+  PRIORITY_LABEL,
+  STATUS_LABEL,
+  TASK_STATUSES,
+  type Activity,
+  type Priority,
+  type Task,
+  type TaskStatus,
+} from "@/lib/types";
+
+const STATUS_DOT: Record<TaskStatus, string> = {
+  BACKLOG: "bg-status-backlog",
+  TODO: "bg-status-todo",
+  DOING: "bg-status-in-progress",
+  COMPLETED: "bg-status-done",
+  ON_HOLD: "bg-status-cancelled",
+};
+
+export function TaskDetailsPanel({
+  task,
+  activity,
+  onChangeStatus,
+  onChangePriority,
+}: {
+  task: Task;
+  activity: Activity[];
+  onChangeStatus: (status: TaskStatus) => void;
+  onChangePriority: (priority: Priority) => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-4 lg:w-80">
+      <section className="rounded-lg border">
+        <header className="flex items-center justify-between border-b px-3 py-2">
+          <h2 className="text-sm font-medium">Details</h2>
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon-sm" aria-label="Add property">
+              <Plus />
+            </Button>
+            <Button variant="ghost" size="icon-sm" aria-label="Configure fields">
+              <Settings2 />
+            </Button>
+          </div>
+        </header>
+
+        <dl className="flex flex-col gap-0.5 p-2 text-sm">
+          <DetailRow icon={<Circle className="size-3.5" />} label="Status">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="hover:bg-accent flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"
+                >
+                  <span
+                    className={cn("size-2 rounded-full", STATUS_DOT[task.status])}
+                  />
+                  {STATUS_LABEL[task.status]}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuLabel>Status</DropdownMenuLabel>
+                {TASK_STATUSES.map((status) => (
+                  <DropdownMenuItem
+                    key={status}
+                    onSelect={() => onChangeStatus(status)}
+                  >
+                    <span className={cn("size-2 rounded-full", STATUS_DOT[status])} />
+                    {STATUS_LABEL[status]}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </DetailRow>
+
+          <DetailRow icon={<SignalHigh className="size-3.5" />} label="Priority">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="hover:bg-accent flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"
+                >
+                  <PriorityIcon priority={task.priority} />
+                  {PRIORITY_LABEL[task.priority]}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuLabel>Priority</DropdownMenuLabel>
+                {PRIORITIES.map((priority) => (
+                  <DropdownMenuItem
+                    key={priority}
+                    onSelect={() => onChangePriority(priority)}
+                  >
+                    <PriorityIcon priority={priority} />
+                    {PRIORITY_LABEL[priority]}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </DetailRow>
+
+          <DetailRow icon={<UserRound className="size-3.5" />} label="Members">
+            {task.assignees.length > 0 ? (
+              <div className="flex items-center gap-1.5 px-1.5">
+                {task.assignees.map((member) => (
+                  <UserAvatar key={member.id} user={member} />
+                ))}
+              </div>
+            ) : (
+              <span className="text-muted-foreground px-1.5">Add members</span>
+            )}
+          </DetailRow>
+
+          <DetailRow icon={<CalendarDays className="size-3.5" />} label="Dates">
+            <span className="text-muted-foreground px-1.5">
+              {task.dueDate ? formatDueDate(task.dueDate) : "End"}
+            </span>
+          </DetailRow>
+
+          <DetailRow icon={<Tag className="size-3.5" />} label="Labels">
+            <span className="text-muted-foreground px-1.5">
+              {task.labels.length > 0
+                ? task.labels.map((label) => label.name).join(", ")
+                : "—"}
+            </span>
+          </DetailRow>
+
+          <DetailRow icon={<Users className="size-3.5" />} label="Reporter">
+            <span className="text-muted-foreground px-1.5">
+              {task.reporter?.name ?? "—"}
+            </span>
+          </DetailRow>
+        </dl>
+      </section>
+
+      <section className="rounded-lg border">
+        <header className="border-b px-3 py-2">
+          <h2 className="text-sm font-medium">Updates</h2>
+        </header>
+
+        <ul className="flex flex-col gap-3 p-3">
+          {activity.length === 0 && (
+            <li className="text-muted-foreground text-sm">No updates yet.</li>
+          )}
+          {activity.map((entry) => (
+            <li key={entry.id} className="flex gap-2 text-sm">
+              <span className="mt-0.5">
+                {entry.field === "priority" ? (
+                  <PriorityIcon priority={(entry.toValue ?? "NO_PRIORITY") as Priority} />
+                ) : (
+                  <Circle className="text-muted-foreground size-3.5" />
+                )}
+              </span>
+              <p className="text-muted-foreground leading-snug">
+                <span className="text-foreground font-medium">
+                  {entry.actor?.name ?? "Someone"}
+                </span>{" "}
+                changed {entry.field} from{" "}
+                {formatValue(entry.field, entry.fromValue)} to{" "}
+                {formatValue(entry.field, entry.toValue)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+function DetailRow({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 py-1">
+      <dt className="text-muted-foreground flex items-center gap-2">
+        {icon}
+        {label}
+      </dt>
+      <dd className="flex items-center">{children}</dd>
+    </div>
+  );
+}
+
+function formatValue(field: string, value: string | null) {
+  if (!value) return "none";
+  if (field === "priority") return PRIORITY_LABEL[value as Priority] ?? value;
+  if (field === "status") return STATUS_LABEL[value as TaskStatus] ?? value;
+  return value;
+}
