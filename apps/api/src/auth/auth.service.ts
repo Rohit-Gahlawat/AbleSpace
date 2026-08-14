@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkspaceProvisioningService } from '../workspaces/workspace-provisioning.service';
 import type { SessionTokenPayload } from '../common/types/request-user';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -38,7 +39,35 @@ export class AuthService {
     };
   }
 
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    if (dto.username) {
+      const taken = await this.prisma.user.findFirst({
+        where: { username: dto.username, NOT: { id: userId } },
+        select: { id: true },
+      });
 
+      if (taken) {
+        throw new ConflictException('That username is already taken');
+      }
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: dto,
+    });
+
+    return this.toProfile(user);
+  }
+
+  async leaveWorkspace(userId: string, workspaceId: string) {
+    const { count } = await this.prisma.workspaceMember.deleteMany({
+      where: { userId, workspaceId },
+    });
+
+    if (count === 0) {
+      throw new NotFoundException('You are not a member of this workspace');
+    }
+  }
 
   private toProfile(user: {
     id: string;

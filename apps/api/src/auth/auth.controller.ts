@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Res,
   UseGuards,
@@ -11,9 +13,10 @@ import { ConfigService } from '@nestjs/config';
 import type { CookieOptions, Response } from 'express';
 
 import { AuthService } from './auth.service';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { SessionGuard } from '../common/guards/session.guard';
-import { SESSION_COOKIE } from '../common/types/request-user';
+import { SESSION_COOKIE, type RequestUser } from '../common/types/request-user';
 
 @Controller('auth')
 export class AuthController {
@@ -34,6 +37,26 @@ export class AuthController {
   @UseGuards(SessionGuard)
   me(@CurrentUser('userId') userId: string) {
     return this.authService.getProfile(userId);
+  }
+
+  @Patch('me')
+  @UseGuards(SessionGuard)
+  updateProfile(
+    @CurrentUser('userId') userId: string,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(userId, dto);
+  }
+
+  @Post('leave-workspace')
+  @UseGuards(SessionGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async leaveWorkspace(
+    @CurrentUser() user: RequestUser,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    await this.authService.leaveWorkspace(user.userId, user.workspaceId);
+    response.clearCookie(SESSION_COOKIE, { ...this.cookieOptions(), maxAge: undefined });
   }
 
   @Post('logout')
