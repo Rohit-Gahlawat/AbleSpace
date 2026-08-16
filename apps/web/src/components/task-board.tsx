@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { GripVertical, MoreHorizontal, Plus } from "lucide-react";
 
@@ -20,8 +21,10 @@ export function TaskBoard({
   tasks: Task[];
   fields: FieldVisibility;
   onAddTask: (status: TaskStatus) => void;
-  onMoveTask: (taskId: string, status: TaskStatus) => void;
+  onMoveTask: (taskId: string, status: TaskStatus, position: number) => void;
 }) {
+  const [dragging, setDragging] = useState<string | null>(null);
+
   return (
     <div className="flex flex-1 items-start gap-3 overflow-x-auto pb-2">
       {BOARD_COLUMNS.map((column) => (
@@ -31,6 +34,8 @@ export function TaskBoard({
           label={column.label}
           tasks={tasks.filter((task) => task.status === column.status)}
           fields={fields}
+          dragging={dragging}
+          onDragStateChange={setDragging}
           onAddTask={onAddTask}
           onMoveTask={onMoveTask}
         />
@@ -44,6 +49,8 @@ function BoardColumn({
   label,
   tasks,
   fields,
+  dragging,
+  onDragStateChange,
   onAddTask,
   onMoveTask,
 }: {
@@ -51,19 +58,38 @@ function BoardColumn({
   label: string;
   tasks: Task[];
   fields: FieldVisibility;
+  dragging: string | null;
+  onDragStateChange: (taskId: string | null) => void;
   onAddTask: (status: TaskStatus) => void;
-  onMoveTask: (taskId: string, status: TaskStatus) => void;
+  onMoveTask: (taskId: string, status: TaskStatus, position: number) => void;
 }) {
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+
+  function drop(index: number) {
+    if (!dragging) return;
+    onMoveTask(dragging, status, index);
+    setDropIndex(null);
+    onDragStateChange(null);
+  }
+
   return (
     <section
       aria-label={label}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+          setDropIndex(null);
+        }
+      }}
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => {
         event.preventDefault();
-        const taskId = event.dataTransfer.getData("text/plain");
-        if (taskId) onMoveTask(taskId, status);
+        drop(dropIndex ?? tasks.length);
       }}
-      className="flex w-72 shrink-0 flex-col self-start rounded-lg border"
+      className={cn(
+        "flex w-72 shrink-0 flex-col self-start rounded-lg border transition-colors",
+        dragging && "border-dashed",
+        dropIndex !== null && "border-primary/40 bg-primary/[0.03]",
+      )}
     >
       <header className="flex items-center gap-1.5 border-b px-3 py-2">
         <GripVertical className="text-muted-foreground size-3.5" />
@@ -83,10 +109,37 @@ function BoardColumn({
         </div>
       </header>
 
-      <div className="flex flex-col gap-2 p-2">
-        {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} fields={fields} />
+      <div className="flex flex-col p-2">
+        {tasks.map((task, index) => (
+          <div key={task.id}>
+            <DropSlot
+              active={dropIndex === index}
+              edge={index === 0 ? "start" : undefined}
+              onDragOver={() => setDropIndex(index)}
+              onDrop={() => drop(index)}
+            />
+            <TaskCard
+              task={task}
+              fields={fields}
+              isDragging={dragging === task.id}
+              onDragStart={() => onDragStateChange(task.id)}
+              onDragEnd={() => {
+                onDragStateChange(null);
+                setDropIndex(null);
+              }}
+              onDragOver={(half) =>
+                setDropIndex(half === "top" ? index : index + 1)
+              }
+            />
+          </div>
         ))}
+
+        <DropSlot
+          active={dropIndex === tasks.length}
+          edge="end"
+          onDragOver={() => setDropIndex(tasks.length)}
+          onDrop={() => drop(tasks.length)}
+        />
 
         <button
           type="button"
@@ -104,16 +157,81 @@ function BoardColumn({
   );
 }
 
-function TaskCard({ task, fields }: { task: Task; fields: FieldVisibility }) {
+function DropSlot({
+  active,
+  edge,
+  onDragOver,
+  onDrop,
+}: {
+  active: boolean;
+  edge?: "start" | "end";
+  onDragOver: () => void;
+  onDrop: () => void;
+}) {
+  return (
+    <div
+      onDragOver={(event) => {
+        event.preventDefault();
+        onDragOver();
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onDrop();
+      }}
+      className={cn(
+        "flex items-center transition-all duration-150",
+        active ? "h-8" : "h-2",
+      )}
+    >
+      <span
+        className={cn(
+          "bg-primary block h-0.5 rounded-full transition-all duration-150",
+          active ? "w-full opacity-100" : "w-0 opacity-0",
+          edge === "start" && "mt-0.5",
+          edge === "end" && "mb-0.5",
+          edge && active && "mx-2",
+        )}
+      />
+    </div>
+  );
+}
+
+function TaskCard({
+  task,
+  fields,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+}: {
+  task: Task;
+  fields: FieldVisibility;
+  isDragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onDragOver: (half: "top" | "bottom") => void;
+}) {
   const assignee = task.assignees[0];
 
   return (
     <article
       draggable
-      onDragStart={(event) => event.dataTransfer.setData("text/plain", task.id)}
+      onDragStart={(event) => {
+        event.dataTransfer.setData("text/plain", task.id);
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
+      onDragOver={(event) => {
+        event.preventDefault();
+        const box = event.currentTarget.getBoundingClientRect();
+        onDragOver(event.clientY < box.top + box.height / 2 ? "top" : "bottom");
+      }}
       className={cn(
         "bg-muted/40 flex cursor-grab flex-col gap-2 rounded-lg border p-3 shadow-xs",
-        "active:cursor-grabbing",
+        "transition-all duration-150 active:cursor-grabbing",
+        isDragging && "scale-[0.98] opacity-40",
       )}
     >
       <div className="flex items-start justify-between gap-2">

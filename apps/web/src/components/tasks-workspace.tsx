@@ -134,16 +134,28 @@ export function TasksWorkspace({
   );
 
   const moveTask = useCallback(
-    async (taskId: string, status: TaskStatus) => {
+    async (taskId: string, status: TaskStatus, position: number) => {
       const previous = tasks;
+      const moved = tasks.find((task) => task.id === taskId);
+      if (!moved) return;
+
+      const column = tasks
+        .filter((task) => task.status === status && task.id !== taskId)
+        .sort((a, b) => a.position - b.position);
+
+      column.splice(position, 0, { ...moved, status });
+
+      const repositioned = column.map((task, index) => ({ ...task, position: index }));
+      const byId = new Map(repositioned.map((task) => [task.id, task]));
+
       setTasks((current) =>
-        current.map((task) => (task.id === taskId ? { ...task, status } : task)),
+        current.map((task) => byId.get(task.id) ?? task),
       );
 
       try {
         await api<Task>(`/tasks/${taskId}/move`, {
           method: "PATCH",
-          body: JSON.stringify({ status }),
+          body: JSON.stringify({ status, position }),
         });
       } catch (error) {
         setTasks(previous);
@@ -245,7 +257,7 @@ export function TasksWorkspace({
           tasks={visibleTasks}
           fields={fields}
           onAddTask={(status) => void addTask(status)}
-          onMoveTask={(taskId, status) => void moveTask(taskId, status)}
+          onMoveTask={(taskId, status, position) => void moveTask(taskId, status, position)}
         />
       )}
     </div>
