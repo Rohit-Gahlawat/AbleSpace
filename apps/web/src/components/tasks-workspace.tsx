@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,6 +29,7 @@ export function TasksWorkspace({
   title: string;
   projectId?: string;
 }) {
+  const router = useRouter();
   const { view, setView, fields, toggleField } = useTaskView();
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -127,20 +129,14 @@ export function TasksWorkspace({
   }, [tasks, query, filters]);
 
   const addTask = useCallback(
-    async (status: TaskStatus) => {
-      try {
-        const created = await api<Task>("/tasks", {
-          method: "POST",
-          body: JSON.stringify({ title: "New task", status, projectId }),
-        });
-        setTasks((current) => [...current, created]);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Could not create the task",
-        );
-      }
+    (status?: TaskStatus) => {
+      const search = new URLSearchParams();
+      if (status) search.set("status", status);
+      if (projectId) search.set("projectId", projectId);
+      const query = search.toString();
+      router.push(query ? `/tasks/new?${query}` : "/tasks/new");
     },
-    [projectId],
+    [projectId, router],
   );
 
   const moveTask = useCallback(
@@ -239,7 +235,7 @@ export function TasksWorkspace({
             labels={labels}
           />
 
-          <Button size="sm" onClick={() => void addTask("TODO")}>
+          <Button size="sm" onClick={() => addTask()}>
             <Plus />
             Add Task
           </Button>
@@ -249,7 +245,7 @@ export function TasksWorkspace({
       {loading ? (
         <TasksSkeleton />
       ) : tasks.length === 0 ? (
-        <EmptyState onAddTask={() => void addTask("TODO")} />
+        <EmptyState onAddTask={() => addTask()} />
       ) : visibleTasks.length === 0 && filtered ? (
         <p className="text-muted-foreground py-12 text-center text-sm">
           No tasks match your search or filters.
@@ -258,13 +254,13 @@ export function TasksWorkspace({
         <TaskList
           tasks={visibleTasks}
           fields={fields}
-          onAddTask={(status) => void addTask(status)}
+          onAddTask={(status) => addTask(status)}
         />
       ) : (
         <TaskBoard
           tasks={visibleTasks}
           fields={fields}
-          onAddTask={(status) => void addTask(status)}
+          onAddTask={(status) => addTask(status)}
           onMoveTask={(taskId, status, position) => void moveTask(taskId, status, position)}
         />
       )}

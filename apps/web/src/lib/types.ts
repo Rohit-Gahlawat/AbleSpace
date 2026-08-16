@@ -31,6 +31,14 @@ export const STATUS_LABEL: Record<TaskStatus, string> = {
   ON_HOLD: "On Hold",
 };
 
+export function isTaskStatus(value: unknown): value is TaskStatus {
+  return typeof value === "string" && (TASK_STATUSES as readonly string[]).includes(value);
+}
+
+export function isPriority(value: unknown): value is Priority {
+  return typeof value === "string" && (PRIORITIES as readonly string[]).includes(value);
+}
+
 export const PRIORITY_LABEL: Record<Priority, string> = {
   NO_PRIORITY: "No Priority",
   URGENT: "Urgent",

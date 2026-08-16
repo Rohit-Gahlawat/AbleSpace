@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Filter, MoreHorizontal, Plus, Search, UserRound, X } from "lucide-react";
 import { toast } from "sonner";
@@ -43,6 +44,7 @@ import {
 } from "@/lib/types";
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,19 +83,9 @@ export default function ProjectsPage() {
     };
   }, []);
 
-  const addProject = useCallback(async () => {
-    try {
-      const created = await api<Project>("/projects", {
-        method: "POST",
-        body: JSON.stringify({ name: "New project" }),
-      });
-      setProjects((current) => [...current, created]);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not create the project",
-      );
-    }
-  }, []);
+  const addProject = useCallback(() => {
+    router.push("/projects/new");
+  }, [router]);
 
   const visibleProjects = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -179,7 +171,7 @@ export default function ProjectsPage() {
               }
             />
 
-            <Button size="sm" onClick={() => void addProject()}>
+            <Button size="sm" onClick={addProject}>
               <Plus />
               Add Project
             </Button>
@@ -277,7 +269,7 @@ export default function ProjectsPage() {
 
             <button
               type="button"
-              onClick={() => void addProject()}
+              onClick={addProject}
               className={cn(
                 "flex w-full items-center gap-1.5 border-t px-4 py-2 text-sm",
                 "text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-colors",
