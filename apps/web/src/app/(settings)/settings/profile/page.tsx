@@ -98,7 +98,7 @@ export default function ProfileSettingsPage() {
             key={user.name}
             defaultValue={user.name}
             onBlur={(event) => void commit("name", event.target)}
-            className="h-8 w-full sm:w-52"
+            className="bg-muted/60 h-8 w-full sm:w-52"
             aria-label="Full name"
           />
         </SettingsRow>
@@ -108,7 +108,7 @@ export default function ProfileSettingsPage() {
             key={user.title ?? ""}
             defaultValue={user.title ?? ""}
             onBlur={(event) => void commit("title", event.target)}
-            className="h-8 w-full sm:w-52"
+            className="bg-muted/60 h-8 w-full sm:w-52"
             aria-label="Title"
           />
         </SettingsRow>
@@ -121,7 +121,7 @@ export default function ProfileSettingsPage() {
             key={user.username}
             defaultValue={user.username}
             onBlur={(event) => void commit("username", event.target)}
-            className="h-8 w-full sm:w-52"
+            className="bg-muted/60 h-8 w-full sm:w-52"
             aria-label="Username"
           />
         </SettingsRow>

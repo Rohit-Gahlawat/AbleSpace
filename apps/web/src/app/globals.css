@@ -212,6 +212,76 @@
   --color-status-cancelled: var(--status-cancelled);
 }
 
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+}
+
+@theme inline {
+  --ease-out: var(--ease-out);
+  --ease-in: var(--ease-in);
+  --ease-in-out: var(--ease-in-out);
+  --default-transition-duration: var(--dur-micro);
+  --default-transition-timing-function: var(--ease-out);
+  --animate-duration: var(--dur-short);
+}
+
+@layer base {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3 {
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  button:active:not(:disabled),
+  a[role="button"]:active {
+    transform: translateY(0.5px);
+  }
+}
+
+@layer components {
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"],
+  [data-slot="tooltip-content"] {
+    transition:
+      opacity var(--dur-short) var(--ease-out),
+      transform var(--dur-short) var(--ease-out);
+  }
+
+  [data-slot="dialog-content"],
+  [data-slot="sheet-content"] {
+    transition:
+      opacity var(--dur-long) var(--ease-out),
+      transform var(--dur-long) var(--ease-out);
+  }
+
+  [data-slot="table"] tbody tr {
+    transition: background-color var(--dur-micro) var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 150ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

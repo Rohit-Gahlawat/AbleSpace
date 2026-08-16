@@ -14,8 +14,8 @@ export function SettingsRow({
   return (
     <div
       className={cn(
-        "flex flex-col items-start gap-2 px-4 py-3",
-        "sm:flex-row sm:items-center sm:justify-between sm:gap-4",
+        "flex flex-col items-start gap-2 px-4 py-4",
+        "sm:flex-row sm:items-center sm:justify-between sm:gap-6",
         "border-b last:border-b-0",
         className,
       )}
