@@ -23,7 +23,7 @@ export function TaskBoard({
   onMoveTask: (taskId: string, status: TaskStatus) => void;
 }) {
   return (
-    <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
+    <div className="flex flex-1 items-start gap-3 overflow-x-auto pb-2">
       {BOARD_COLUMNS.map((column) => (
         <BoardColumn
           key={column.status}
@@ -112,7 +112,7 @@ function TaskCard({ task, fields }: { task: Task; fields: FieldVisibility }) {
       draggable
       onDragStart={(event) => event.dataTransfer.setData("text/plain", task.id)}
       className={cn(
-        "bg-card flex cursor-grab flex-col gap-2 rounded-lg border p-3 shadow-xs",
+        "bg-muted/40 flex cursor-grab flex-col gap-2 rounded-lg border p-3 shadow-xs",
         "active:cursor-grabbing",
       )}
     >
@@ -139,7 +139,7 @@ function TaskCard({ task, fields }: { task: Task; fields: FieldVisibility }) {
           {fields.members && assignee && (
             <>
               <UserAvatar user={assignee} />
-              <span className="text-muted-foreground truncate text-xs">
+              <span className="truncate text-xs font-semibold">
                 {assignee.name}
               </span>
             </>

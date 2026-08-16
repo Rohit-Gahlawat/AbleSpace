@@ -51,7 +51,7 @@ export function DueDateChip({
 
 export function LabelChip({ label }: { label: Pick<TaskLabel, "id" | "name"> }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium">
+    <span className="bg-muted inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium">
       <Tag className="size-3" />
       {label.name}
     </span>
