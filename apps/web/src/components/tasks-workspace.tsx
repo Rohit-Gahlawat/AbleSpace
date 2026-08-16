@@ -9,6 +9,7 @@ import {
   countActiveFilters,
   EMPTY_FILTERS,
   FilterMenu,
+  type DueRange,
   type TaskFilters,
 } from "@/components/filter-menu";
 import { TaskBoard } from "@/components/task-board";
@@ -112,6 +113,15 @@ export function TasksWorkspace({
       ) {
         return false;
       }
+      if (
+        filters.reporterIds.length &&
+        !(task.reporter && filters.reporterIds.includes(task.reporter.id))
+      ) {
+        return false;
+      }
+      if (filters.due.length && !matchesDueRange(task.dueDate, filters.due)) {
+        return false;
+      }
       return true;
     });
   }, [tasks, query, filters]);
@@ -171,41 +181,39 @@ export function TasksWorkspace({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {searchOpen ? (
-          <div className="relative max-w-md flex-1">
-            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
-            <Input
-              ref={searchRef}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search tasks..."
-              className="h-8 pr-16 pl-8"
-              autoFocus
-            />
-            <kbd className="text-muted-foreground bg-muted absolute top-1/2 right-8 -translate-y-1/2 rounded px-1.5 py-0.5 text-[0.625rem] font-medium">
-              ⌘F
-            </kbd>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchOpen(false);
-                setQuery("");
-              }}
-              aria-label="Close search"
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-            >
-              <X className="size-3.5" />
-            </button>
-          </div>
-        ) : (
-          <h1 className="text-base font-semibold tracking-tight">{title}</h1>
-        )}
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-base font-semibold tracking-tight">{title}</h1>
 
-        <div className="flex shrink-0 items-center gap-1.5">
-          {!searchOpen && (
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          {searchOpen ? (
+            <div className="relative w-56 sm:w-72">
+              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
+              <Input
+                ref={searchRef}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search tasks..."
+                className="h-8 pr-16 pl-8"
+                autoFocus
+              />
+              <kbd className="text-muted-foreground bg-muted absolute top-1/2 right-8 -translate-y-1/2 rounded px-1.5 py-0.5 text-[0.625rem] font-medium">
+                ⌘F
+              </kbd>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchOpen(false);
+                  setQuery("");
+                }}
+                aria-label="Close search"
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          ) : (
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon-sm"
               aria-label="Search tasks"
               onClick={() => {
@@ -262,6 +270,24 @@ export function TasksWorkspace({
       )}
     </div>
   );
+}
+
+
+function matchesDueRange(dueDate: string | null, ranges: DueRange[]) {
+  if (!dueDate) return ranges.includes("none");
+
+  const due = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(endOfWeek.getDate() + 7);
+
+  return ranges.some((range) => {
+    if (range === "overdue") return due < today;
+    if (range === "today") return due.toDateString() === today.toDateString();
+    if (range === "week") return due >= today && due <= endOfWeek;
+    return false;
+  });
 }
 
 function TasksSkeleton() {

@@ -1,16 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ListFilter, MoreHorizontal, Plus, Search } from "lucide-react";
+import { Filter, MoreHorizontal, Plus, Search, UserRound, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
-import { PriorityBadge } from "@/components/priority-badge";
+import { PriorityBadge, PriorityIcon } from "@/components/priority-badge";
 import { formatDueDate } from "@/components/task-meta";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -22,19 +34,36 @@ import {
 import { Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
-import type { Project } from "@/lib/types";
+import {
+  PRIORITIES,
+  PRIORITY_LABEL,
+  type Priority,
+  type Project,
+  type User,
+} from "@/lib/types";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [priorities, setPriorities] = useState<Priority[]>([]);
+  const [leadIds, setLeadIds] = useState<string[]>([]);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        const list = await api<Project[]>("/projects");
-        if (!cancelled) setProjects(list);
+        const [list, memberList] = await Promise.all([
+          api<Project[]>("/projects"),
+          api<User[]>("/members"),
+        ]);
+        if (cancelled) return;
+        setProjects(list);
+        setMembers(memberList);
       } catch (error) {
         if (!cancelled) {
           toast.error(
@@ -66,6 +95,19 @@ export default function ProjectsPage() {
     }
   }, []);
 
+  const visibleProjects = useMemo(() => {
+    const term = query.trim().toLowerCase();
+
+    return projects.filter((project) => {
+      if (term && !project.name.toLowerCase().includes(term)) return false;
+      if (priorities.length && !priorities.includes(project.priority)) return false;
+      if (leadIds.length && (!project.lead || !leadIds.includes(project.lead.id))) {
+        return false;
+      }
+      return true;
+    });
+  }, [projects, query, priorities, leadIds]);
+
   return (
     <>
       <AppHeader />
@@ -74,17 +116,69 @@ export default function ProjectsPage() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-base font-semibold tracking-tight">Projects</h1>
 
-          <div className="flex items-center gap-1.5">
-            <Button variant="ghost" size="icon-sm" aria-label="Search projects">
-              <Search />
-            </Button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            {searchOpen ? (
+              <div className="relative w-56">
+                <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
+                <Input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search projects..."
+                  className="h-8 pr-8 pl-8"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchOpen(false);
+                    setQuery("");
+                  }}
+                  aria-label="Close search"
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label="Search projects"
+                onClick={() => {
+                  setSearchOpen(true);
+                  requestAnimationFrame(() => searchRef.current?.focus());
+                }}
+              >
+                <Search />
+              </Button>
+            )}
+
             <Button variant="outline" size="sm">
               <Table2 />
               Fields
             </Button>
-            <Button variant="ghost" size="icon-sm" aria-label="Filter projects">
-              <ListFilter />
-            </Button>
+
+            <ProjectFilterMenu
+              priorities={priorities}
+              leadIds={leadIds}
+              members={members}
+              onTogglePriority={(value) =>
+                setPriorities((current) =>
+                  current.includes(value)
+                    ? current.filter((item) => item !== value)
+                    : [...current, value],
+                )
+              }
+              onToggleLead={(value) =>
+                setLeadIds((current) =>
+                  current.includes(value)
+                    ? current.filter((item) => item !== value)
+                    : [...current, value],
+                )
+              }
+            />
+
             <Button size="sm" onClick={() => void addProject()}>
               <Plus />
               Add Project
@@ -95,9 +189,9 @@ export default function ProjectsPage() {
         {loading ? (
           <Skeleton className="h-48 w-full rounded-lg" />
         ) : (
-          <div className="overflow-hidden rounded-lg border">
+          <div className="bg-muted/30 overflow-hidden rounded-lg border">
             <ul className="divide-y md:hidden">
-              {projects.map((project) => (
+              {visibleProjects.map((project) => (
                 <li key={project.id}>
                   <Link
                     href={`/projects/${project.id}`}
@@ -128,7 +222,7 @@ export default function ProjectsPage() {
             <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableRow className="bg-muted hover:bg-muted">
                     <TableHead className="min-w-56">Projects</TableHead>
                     <TableHead className="w-28">Priority</TableHead>
                     <TableHead className="w-28">Lead</TableHead>
@@ -138,7 +232,7 @@ export default function ProjectsPage() {
                 </TableHeader>
 
                 <TableBody>
-                  {projects.map((project) => (
+                  {visibleProjects.map((project) => (
                     <TableRow key={project.id}>
                       <TableCell>
                         <Link
@@ -196,5 +290,88 @@ export default function ProjectsPage() {
         )}
       </div>
     </>
+  );
+}
+
+function ProjectFilterMenu({
+  priorities,
+  leadIds,
+  members,
+  onTogglePriority,
+  onToggleLead,
+}: {
+  priorities: Priority[];
+  leadIds: string[];
+  members: User[];
+  onTogglePriority: (value: Priority) => void;
+  onToggleLead: (value: string) => void;
+}) {
+  const active = priorities.length + leadIds.length;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size={active > 0 ? "sm" : "icon-sm"}
+          aria-label="Filter projects"
+        >
+          <Filter />
+          {active > 0 && <span className="tabular-nums">{active}</span>}
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <PriorityIcon priority="HIGH" />
+            Priority
+          </DropdownMenuSubTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuSubContent className="w-48">
+              <DropdownMenuLabel>Priority</DropdownMenuLabel>
+              {PRIORITIES.map((priority) => (
+                <DropdownMenuCheckboxItem
+                  key={priority}
+                  checked={priorities.includes(priority)}
+                  onCheckedChange={() => onTogglePriority(priority)}
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  <span className="flex items-center gap-2">
+                    <PriorityIcon priority={priority} />
+                    {PRIORITY_LABEL[priority]}
+                  </span>
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
+
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <UserRound />
+            Lead
+          </DropdownMenuSubTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuSubContent className="w-52">
+              <DropdownMenuLabel>Lead</DropdownMenuLabel>
+              {members.map((member) => (
+                <DropdownMenuCheckboxItem
+                  key={member.id}
+                  checked={leadIds.includes(member.id)}
+                  onCheckedChange={() => onToggleLead(member.id)}
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  <span className="flex items-center gap-2">
+                    <UserAvatar user={member} className="size-4" />
+                    {member.name}
+                  </span>
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
