@@ -86,7 +86,7 @@ function TaskGroup({
       </CollapsibleTrigger>
 
       <CollapsibleContent>
-        <div className="overflow-hidden rounded-lg border">
+        <div className="bg-muted/30 overflow-hidden rounded-lg border">
           <ul className="divide-y md:hidden">
             {tasks.map((task) => (
               <li key={task.id}>
@@ -126,7 +126,7 @@ function TaskGroup({
           <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableRow className="bg-muted hover:bg-muted">
                   <TableHead className="min-w-56">Task</TableHead>
                   {fields.priority && <TableHead className="w-28">Priority</TableHead>}
                   {fields.status && <TableHead className="w-28">Status</TableHead>}

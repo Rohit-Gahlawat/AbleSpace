@@ -3,10 +3,12 @@
 import { use, useCallback, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import {
+  ChevronDown,
   Eye,
   Lock,
   MoreHorizontal,
   PanelRight,
+  Paperclip,
   Plus,
   Share2,
 } from "lucide-react";
@@ -19,6 +21,11 @@ import { TaskDetailsPanel } from "@/components/task-details-panel";
 import { DueDateChip, LabelChips, MemberAvatars } from "@/components/task-meta";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -75,7 +82,12 @@ export default function TaskDetailPage({
   }, [id]);
 
   const patch = useCallback(
-    async (body: { status?: TaskStatus; priority?: Priority }) => {
+    async (body: {
+      status?: TaskStatus;
+      priority?: Priority;
+      startDate?: string | null;
+      dueDate?: string | null;
+    }) => {
       if (!task) return;
       const previous = task;
       setTask({ ...task, ...body });
@@ -124,41 +136,49 @@ export default function TaskDetailPage({
         crumbs={[{ label: "Tasks", href: "/tasks" }, { label: task.title }]}
       />
 
-      <div className="flex flex-1 flex-col gap-6 p-4 lg:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <h1 className="text-xl font-semibold tracking-tight">
-                {task.title}
-              </h1>
-              {task.description && (
-                <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-                  {task.description}
-                </p>
-              )}
-            </div>
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        <div className="flex items-start justify-end gap-1.5">
+          <Button variant="outline" size="icon-sm" aria-label="Lock task">
+            <Lock />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-blue-600 dark:text-blue-400"
+            aria-label="Viewers"
+          >
+            <Eye />
+            <span className="tabular-nums">1</span>
+          </Button>
+          <Button variant="outline" size="icon-sm" aria-label="Share task">
+            <Share2 />
+          </Button>
+          <Button variant="outline" size="icon-sm" aria-label="More actions">
+            <MoreHorizontal />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Toggle details panel"
+          >
+            <PanelRight />
+          </Button>
+        </div>
 
-            <div className="flex shrink-0 items-center gap-0.5">
-              <Button variant="ghost" size="icon-sm" aria-label="Lock task">
-                <Lock />
-              </Button>
-              <Button variant="ghost" size="sm" className="gap-1" aria-label="Viewers">
-                <Eye />
-                <span className="tabular-nums">1</span>
-              </Button>
-              <Button variant="ghost" size="icon-sm" aria-label="Share task">
-                <Share2 />
-              </Button>
-              <Button variant="ghost" size="icon-sm" aria-label="More actions">
-                <MoreHorizontal />
-              </Button>
-              <Button variant="ghost" size="icon-sm" aria-label="Toggle details panel">
-                <PanelRight />
-              </Button>
-            </div>
+        <div className="flex flex-1 flex-col gap-6 lg:flex-row">
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <h1 className="text-xl font-semibold tracking-tight">
+              {task.title}
+            </h1>
+            {task.description && (
+              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+                {task.description}
+              </p>
+            )}
           </div>
 
-          <dl className="flex flex-col gap-2 text-sm">
+          <dl className="flex flex-col gap-4 text-sm">
             <PropertyRow label="Properties">
               <div className="flex flex-wrap items-center gap-2">
                 {task.assignees[0] && (
@@ -186,14 +206,18 @@ export default function TaskDetailPage({
                 type="button"
                 className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs transition-colors"
               >
-                <Plus className="size-3" />
+                <Paperclip className="size-3" />
                 Add document or link...
               </button>
             </PropertyRow>
           </dl>
 
-          <section className="flex flex-col gap-2">
-            <h2 className="text-sm font-medium">Subtasks</h2>
+          <Collapsible defaultOpen className="group/subtasks flex flex-col gap-2">
+            <CollapsibleTrigger className="flex w-fit items-center gap-1.5 text-sm font-medium">
+              <ChevronDown className="size-3.5 transition-transform group-data-[state=closed]/subtasks:-rotate-90" />
+              Subtasks
+            </CollapsibleTrigger>
+            <CollapsibleContent>
             <div className="overflow-hidden rounded-lg border">
               <ul className="divide-y md:hidden">
                 {task.subtasks.map((subtask) => (
@@ -218,7 +242,7 @@ export default function TaskDetailPage({
               <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableRow className="bg-muted hover:bg-muted">
                       <TableHead className="min-w-40">Task</TableHead>
                       <TableHead className="w-28">Priority</TableHead>
                       <TableHead className="w-24">Members</TableHead>
@@ -267,7 +291,8 @@ export default function TaskDetailPage({
                 Add Subtasks
               </button>
             </div>
-          </section>
+            </CollapsibleContent>
+          </Collapsible>
 
           <TaskComments
             taskId={task.id}
@@ -283,7 +308,9 @@ export default function TaskDetailPage({
           activity={task.activity}
           onChangeStatus={(status) => void patch({ status })}
           onChangePriority={(priority) => void patch({ priority })}
+          onChangeDates={(dates) => void patch(dates)}
         />
+        </div>
       </div>
     </>
   );
@@ -297,8 +324,8 @@ function PropertyRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-4">
-      <dt className="text-muted-foreground w-24 shrink-0 text-xs">{label}</dt>
+    <div className="flex items-center gap-8">
+      <dt className="text-muted-foreground w-24 shrink-0 text-sm">{label}</dt>
       <dd className="min-w-0">{children}</dd>
     </div>
   );

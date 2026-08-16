@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   CalendarDays,
   Circle,
   Plus,
@@ -8,8 +9,16 @@ import {
   SignalHigh,
   Tag,
   UserRound,
+  UserRoundPlus,
   Users,
 } from "lucide-react";
+
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import { PriorityIcon } from "@/components/priority-badge";
 import { UserAvatar } from "@/components/user-avatar";
@@ -47,11 +56,13 @@ export function TaskDetailsPanel({
   activity,
   onChangeStatus,
   onChangePriority,
+  onChangeDates,
 }: {
   task: Task;
   activity: Activity[];
   onChangeStatus: (status: TaskStatus) => void;
   onChangePriority: (priority: Priority) => void;
+  onChangeDates: (dates: { startDate?: string | null; dueDate?: string | null }) => void;
 }) {
   return (
     <div className="flex w-full flex-col gap-4 lg:w-80">
@@ -131,14 +142,30 @@ export function TaskDetailsPanel({
                 ))}
               </div>
             ) : (
-              <span className="text-muted-foreground px-1.5">Add members</span>
+              <button
+                type="button"
+                className="hover:bg-accent flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"
+              >
+                <UserRoundPlus className="size-3.5" />
+                Add members
+              </button>
             )}
           </DetailRow>
 
           <DetailRow icon={<CalendarDays className="size-3.5" />} label="Dates">
-            <span className="text-muted-foreground px-1.5">
-              {task.dueDate ? formatDueDate(task.dueDate) : "End"}
-            </span>
+            <div className="flex items-center gap-1.5 px-1.5">
+              <DateChip
+                value={task.startDate}
+                placeholder="Start"
+                onSelect={(date) => onChangeDates({ startDate: date })}
+              />
+              <ArrowRight className="text-muted-foreground size-3" />
+              <DateChip
+                value={task.dueDate}
+                placeholder="End"
+                onSelect={(date) => onChangeDates({ dueDate: date })}
+              />
+            </div>
           </DetailRow>
 
           <DetailRow icon={<Tag className="size-3.5" />} label="Labels">
@@ -149,7 +176,11 @@ export function TaskDetailsPanel({
             </span>
           </DetailRow>
 
-          <DetailRow icon={<Users className="size-3.5" />} label="Reporter">
+          <DetailRow icon={<Users className="size-3.5" />} label="Teams">
+            <span className="text-muted-foreground px-1.5">Add team</span>
+          </DetailRow>
+
+          <DetailRow icon={<UserRound className="size-3.5" />} label="Reporter">
             <span className="text-muted-foreground px-1.5">
               {task.reporter?.name ?? "—"}
             </span>
@@ -188,6 +219,39 @@ export function TaskDetailsPanel({
         </ul>
       </section>
     </div>
+  );
+}
+
+
+function DateChip({
+  value,
+  placeholder,
+  onSelect,
+}: {
+  value: string | null;
+  placeholder: string;
+  onSelect: (date: string | null) => void;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="hover:bg-accent flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-xs"
+        >
+          <CalendarDays className="size-3" />
+          {value ? formatDueDate(value, false) : placeholder}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-0">
+        <Calendar
+          mode="single"
+          selected={value ? new Date(value) : undefined}
+          onSelect={(date) => onSelect(date ? date.toISOString() : null)}
+          autoFocus
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 
