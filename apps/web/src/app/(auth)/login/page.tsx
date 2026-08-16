@@ -45,7 +45,7 @@ export default function LoginPage() {
 
         <div className="grid gap-4">
           <Button
-            className="w-full"
+            className="bg-foreground text-background hover:bg-foreground/90 w-full"
             onClick={continueAsGuest}
             disabled={isSigningIn}
           >
