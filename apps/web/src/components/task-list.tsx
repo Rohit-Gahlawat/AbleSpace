@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 
 import { PriorityBadge } from "@/components/priority-badge";
+import { RowActionsMenu } from "@/components/row-actions-menu";
 import { LabelChips, MemberAvatars, formatDueDate } from "@/components/task-meta";
-import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -35,10 +35,12 @@ export function TaskList({
   tasks,
   fields,
   onAddTask,
+  onDeleteTask,
 }: {
   tasks: Task[];
   fields: FieldVisibility;
   onAddTask: (status: TaskStatus) => void;
+  onDeleteTask: (taskId: string) => void;
 }) {
   const groups = LIST_GROUPS.map((status) => ({
     status,
@@ -62,6 +64,7 @@ export function TaskList({
           tasks={group.tasks}
           fields={fields}
           onAddTask={onAddTask}
+          onDeleteTask={onDeleteTask}
         />
       ))}
     </div>
@@ -73,11 +76,13 @@ function TaskGroup({
   tasks,
   fields,
   onAddTask,
+  onDeleteTask,
 }: {
   status: TaskStatus;
   tasks: Task[];
   fields: FieldVisibility;
   onAddTask: (status: TaskStatus) => void;
+  onDeleteTask: (taskId: string) => void;
 }) {
   return (
     <Collapsible defaultOpen className="group/collapsible">
@@ -193,13 +198,11 @@ function TaskGroup({
                     )}
 
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Actions for ${task.title}`}
-                      >
-                        <MoreHorizontal />
-                      </Button>
+                      <RowActionsMenu
+                        editHref={`/tasks/${task.id}`}
+                        label={task.title}
+                        onDelete={() => onDeleteTask(task.id)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

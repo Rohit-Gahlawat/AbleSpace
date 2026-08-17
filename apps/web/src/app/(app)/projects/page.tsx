@@ -3,19 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Columns3,
-  Filter,
-  MoreHorizontal,
-  Plus,
-  Search,
-  UserRound,
-  X,
-} from "lucide-react";
+import { Columns3, Filter, Plus, Search, UserRound, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
 import { PriorityBadge, PriorityIcon } from "@/components/priority-badge";
+import { RowActionsMenu } from "@/components/row-actions-menu";
 import { formatDueDate } from "@/components/task-meta";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -93,6 +86,24 @@ export default function ProjectsPage() {
   const addProject = useCallback(() => {
     router.push("/projects/new");
   }, [router]);
+
+  const deleteProject = useCallback(
+    async (projectId: string) => {
+      const previous = projects;
+      setProjects((current) => current.filter((item) => item.id !== projectId));
+
+      try {
+        await api(`/projects/${projectId}`, { method: "DELETE" });
+        toast.success("Project deleted");
+      } catch (error) {
+        setProjects(previous);
+        toast.error(
+          error instanceof Error ? error.message : "Could not delete the project",
+        );
+      }
+    },
+    [projects],
+  );
 
   const visibleProjects = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -260,13 +271,11 @@ export default function ProjectsPage() {
                         {project.dueDate ? formatDueDate(project.dueDate) : "—"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Actions for ${project.name}`}
-                        >
-                          <MoreHorizontal />
-                        </Button>
+                        <RowActionsMenu
+                          editHref={`/projects/${project.id}`}
+                          label={project.name}
+                          onDelete={() => void deleteProject(project.id)}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

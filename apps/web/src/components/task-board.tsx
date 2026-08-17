@@ -5,6 +5,7 @@ import Link from "next/link";
 import { GripVertical, MoreHorizontal, Plus } from "lucide-react";
 
 import { PriorityIcon } from "@/components/priority-badge";
+import { RowActionsMenu } from "@/components/row-actions-menu";
 import { DueDateChip, LabelChips } from "@/components/task-meta";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -17,11 +18,13 @@ export function TaskBoard({
   fields,
   onAddTask,
   onMoveTask,
+  onDeleteTask,
 }: {
   tasks: Task[];
   fields: FieldVisibility;
   onAddTask: (status: TaskStatus) => void;
   onMoveTask: (taskId: string, status: TaskStatus, position: number) => void;
+  onDeleteTask: (taskId: string) => void;
 }) {
   const [dragging, setDragging] = useState<string | null>(null);
 
@@ -38,6 +41,7 @@ export function TaskBoard({
           onDragStateChange={setDragging}
           onAddTask={onAddTask}
           onMoveTask={onMoveTask}
+          onDeleteTask={onDeleteTask}
         />
       ))}
     </div>
@@ -53,6 +57,7 @@ function BoardColumn({
   onDragStateChange,
   onAddTask,
   onMoveTask,
+  onDeleteTask,
 }: {
   status: TaskStatus;
   label: string;
@@ -62,6 +67,7 @@ function BoardColumn({
   onDragStateChange: (taskId: string | null) => void;
   onAddTask: (status: TaskStatus) => void;
   onMoveTask: (taskId: string, status: TaskStatus, position: number) => void;
+  onDeleteTask: (taskId: string) => void;
 }) {
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
@@ -130,6 +136,7 @@ function BoardColumn({
               onDragOver={(half) =>
                 setDropIndex(half === "top" ? index : index + 1)
               }
+              onDelete={() => onDeleteTask(task.id)}
             />
           </div>
         ))}
@@ -204,6 +211,7 @@ function TaskCard({
   onDragStart,
   onDragEnd,
   onDragOver,
+  onDelete,
 }: {
   task: Task;
   fields: FieldVisibility;
@@ -211,6 +219,7 @@ function TaskCard({
   onDragStart: () => void;
   onDragEnd: () => void;
   onDragOver: (half: "top" | "bottom") => void;
+  onDelete: () => void;
 }) {
   const assignee = task.assignees[0];
 
@@ -241,14 +250,12 @@ function TaskCard({
         >
           {task.title}
         </Link>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="-mt-1 -mr-1 shrink-0"
-          aria-label={`Actions for ${task.title}`}
-        >
-          <MoreHorizontal />
-        </Button>
+        <RowActionsMenu
+          editHref={`/tasks/${task.id}`}
+          label={task.title}
+          onDelete={onDelete}
+          className="-mt-1 -mr-1"
+        />
       </div>
 
       <div className="flex items-center justify-between gap-2">

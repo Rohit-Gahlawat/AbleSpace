@@ -173,6 +173,24 @@ export function TasksWorkspace({
     [tasks],
   );
 
+  const deleteTask = useCallback(
+    async (taskId: string) => {
+      const previous = tasks;
+      setTasks((current) => current.filter((task) => task.id !== taskId));
+
+      try {
+        await api(`/tasks/${taskId}`, { method: "DELETE" });
+        toast.success("Task deleted");
+      } catch (error) {
+        setTasks(previous);
+        toast.error(
+          error instanceof Error ? error.message : "Could not delete the task",
+        );
+      }
+    },
+    [tasks],
+  );
+
   const filtered = countActiveFilters(filters) + query.trim().length > 0;
 
   return (
@@ -255,6 +273,7 @@ export function TasksWorkspace({
           tasks={visibleTasks}
           fields={fields}
           onAddTask={(status) => addTask(status)}
+          onDeleteTask={(taskId) => void deleteTask(taskId)}
         />
       ) : (
         <TaskBoard
@@ -262,6 +281,7 @@ export function TasksWorkspace({
           fields={fields}
           onAddTask={(status) => addTask(status)}
           onMoveTask={(taskId, status, position) => void moveTask(taskId, status, position)}
+          onDeleteTask={(taskId) => void deleteTask(taskId)}
         />
       )}
     </div>
