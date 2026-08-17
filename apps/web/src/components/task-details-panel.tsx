@@ -13,43 +13,22 @@ import {
   Users,
 } from "lucide-react";
 
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-
 import { PriorityIcon } from "@/components/priority-badge";
+import {
+  DateChip,
+  PriorityPicker,
+  StatusPicker,
+} from "@/components/task-fields";
 import { UserAvatar } from "@/components/user-avatar";
-import { formatDueDate } from "@/components/task-meta";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import {
-  PRIORITIES,
   PRIORITY_LABEL,
   STATUS_LABEL,
-  TASK_STATUSES,
   type Activity,
   type Priority,
   type Task,
   type TaskStatus,
 } from "@/lib/types";
-
-const STATUS_DOT: Record<TaskStatus, string> = {
-  BACKLOG: "bg-status-backlog",
-  TODO: "bg-status-todo",
-  DOING: "bg-status-in-progress",
-  COMPLETED: "bg-status-done",
-  ON_HOLD: "bg-status-cancelled",
-};
 
 export function TaskDetailsPanel({
   task,
@@ -81,57 +60,11 @@ export function TaskDetailsPanel({
 
         <dl className="flex flex-col gap-0.5 p-2 text-sm">
           <DetailRow icon={<Circle className="size-3.5" />} label="Status">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="hover:bg-accent flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"
-                >
-                  <span
-                    className={cn("size-2 rounded-full", STATUS_DOT[task.status])}
-                  />
-                  {STATUS_LABEL[task.status]}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel>Status</DropdownMenuLabel>
-                {TASK_STATUSES.map((status) => (
-                  <DropdownMenuItem
-                    key={status}
-                    onSelect={() => onChangeStatus(status)}
-                  >
-                    <span className={cn("size-2 rounded-full", STATUS_DOT[status])} />
-                    {STATUS_LABEL[status]}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <StatusPicker status={task.status} onSelect={onChangeStatus} />
           </DetailRow>
 
           <DetailRow icon={<SignalHigh className="size-3.5" />} label="Priority">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="hover:bg-accent flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"
-                >
-                  <PriorityIcon priority={task.priority} />
-                  {PRIORITY_LABEL[task.priority]}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel>Priority</DropdownMenuLabel>
-                {PRIORITIES.map((priority) => (
-                  <DropdownMenuItem
-                    key={priority}
-                    onSelect={() => onChangePriority(priority)}
-                  >
-                    <PriorityIcon priority={priority} />
-                    {PRIORITY_LABEL[priority]}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <PriorityPicker priority={task.priority} onSelect={onChangePriority} />
           </DetailRow>
 
           <DetailRow icon={<UserRound className="size-3.5" />} label="Members">
@@ -223,37 +156,6 @@ export function TaskDetailsPanel({
 }
 
 
-function DateChip({
-  value,
-  placeholder,
-  onSelect,
-}: {
-  value: string | null;
-  placeholder: string;
-  onSelect: (date: string | null) => void;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="hover:bg-accent flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-xs"
-        >
-          <CalendarDays className="size-3" />
-          {value ? formatDueDate(value, false) : placeholder}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={value ? new Date(value) : undefined}
-          onSelect={(date) => onSelect(date ? date.toISOString() : null)}
-          autoFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 function DetailRow({
   icon,

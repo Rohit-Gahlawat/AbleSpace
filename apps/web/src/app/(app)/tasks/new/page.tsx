@@ -4,10 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
-  CalendarDays,
   ChevronDown,
   Eye,
-  FolderOpen,
   Lock,
   MoreHorizontal,
   PanelRight,
@@ -16,17 +14,19 @@ import {
   Share2,
   Tag,
   Trash2,
-  UserRound,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
-import { PriorityIcon } from "@/components/priority-badge";
-import { formatDueDate } from "@/components/task-meta";
-import { UserAvatar } from "@/components/user-avatar";
+import {
+  DateChip,
+  MembersPicker,
+  PriorityPicker,
+  ProjectPicker,
+  StatusPicker,
+} from "@/components/task-fields";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,24 +37,14 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import {
-  PRIORITIES,
-  PRIORITY_LABEL,
-  STATUS_LABEL,
-  TASK_STATUSES,
   isPriority,
   isTaskStatus,
   type Label as TaskLabel,
@@ -64,14 +54,6 @@ import {
   type TaskStatus,
   type User,
 } from "@/lib/types";
-
-const STATUS_DOT: Record<TaskStatus, string> = {
-  BACKLOG: "bg-status-backlog",
-  TODO: "bg-status-todo",
-  DOING: "bg-status-in-progress",
-  COMPLETED: "bg-status-done",
-  ON_HOLD: "bg-status-cancelled",
-};
 
 type Draft = {
   title: string;
@@ -146,11 +128,6 @@ export default function NewTaskPage() {
   const project = useMemo(
     () => projects.find((item) => item.id === draft.projectId) ?? null,
     [projects, draft.projectId],
-  );
-
-  const chosenMembers = useMemo(
-    () => members.filter((member) => draft.assigneeIds.includes(member.id)),
-    [members, draft.assigneeIds],
   );
 
   const chosenLabels = useMemo(
@@ -284,7 +261,6 @@ export default function NewTaskPage() {
                     members={members}
                     selected={draft.assigneeIds}
                     onToggle={(id) => toggleIn("assigneeIds", id)}
-                    chosen={chosenMembers}
                   />
                   <DateChip
                     value={draft.dueDate}
@@ -418,33 +394,10 @@ export default function NewTaskPage() {
               <CollapsibleContent>
               <dl className="flex flex-col gap-0.5 p-2 text-sm">
                 <DetailRow label="Status">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="hover:bg-accent flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"
-                      >
-                        <span
-                          className={cn("size-2 rounded-full", STATUS_DOT[draft.status])}
-                        />
-                        {STATUS_LABEL[draft.status]}
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuLabel>Status</DropdownMenuLabel>
-                      {TASK_STATUSES.map((status) => (
-                        <DropdownMenuItem
-                          key={status}
-                          onSelect={() => update("status", status)}
-                        >
-                          <span
-                            className={cn("size-2 rounded-full", STATUS_DOT[status])}
-                          />
-                          {STATUS_LABEL[status]}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <StatusPicker
+                    status={draft.status}
+                    onSelect={(status) => update("status", status)}
+                  />
                 </DetailRow>
 
                 <DetailRow label="Project">
@@ -452,34 +405,16 @@ export default function NewTaskPage() {
                     projects={projects}
                     project={project}
                     onSelect={(id) => update("projectId", id)}
+                    align="end"
                     plain
                   />
                 </DetailRow>
 
                 <DetailRow label="Priority">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="hover:bg-accent flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"
-                      >
-                        <PriorityIcon priority={draft.priority} />
-                        {PRIORITY_LABEL[draft.priority]}
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuLabel>Priority</DropdownMenuLabel>
-                      {PRIORITIES.map((priority) => (
-                        <DropdownMenuItem
-                          key={priority}
-                          onSelect={() => update("priority", priority)}
-                        >
-                          <PriorityIcon priority={priority} />
-                          {PRIORITY_LABEL[priority]}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <PriorityPicker
+                    priority={draft.priority}
+                    onSelect={(priority) => update("priority", priority)}
+                  />
                 </DetailRow>
 
                 <DetailRow label="Members">
@@ -487,7 +422,7 @@ export default function NewTaskPage() {
                     members={members}
                     selected={draft.assigneeIds}
                     onToggle={(id) => toggleIn("assigneeIds", id)}
-                    chosen={chosenMembers}
+                    align="end"
                     plain
                   />
                 </DetailRow>
@@ -561,146 +496,5 @@ function DetailRow({
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="flex items-center">{children}</dd>
     </div>
-  );
-}
-
-function DateChip({
-  value,
-  placeholder,
-  tone,
-  onSelect,
-}: {
-  value: string | null;
-  placeholder: string;
-  tone?: "destructive";
-  onSelect: (date: string | null) => void;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-xs",
-            "hover:bg-accent",
-            tone === "destructive" &&
-              value &&
-              "bg-destructive/10 text-destructive border-transparent",
-          )}
-        >
-          <CalendarDays className="size-3" />
-          {value ? formatDueDate(value) : placeholder}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={value ? new Date(value) : undefined}
-          onSelect={(date) => onSelect(date ? date.toISOString() : null)}
-          autoFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function MembersPicker({
-  members,
-  selected,
-  chosen,
-  onToggle,
-  plain,
-}: {
-  members: User[];
-  selected: string[];
-  chosen: User[];
-  onToggle: (id: string) => void;
-  plain?: boolean;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "flex items-center gap-1.5 text-xs",
-            plain
-              ? "hover:bg-accent rounded-sm px-1.5 py-0.5"
-              : "rounded-md border px-1.5 py-0.5",
-          )}
-        >
-          {chosen.length > 0 ? (
-            <>
-              <UserAvatar user={chosen[0]} className="size-4" />
-              <span className="font-medium">
-                {chosen.length > 1 ? `${chosen.length} members` : chosen[0].name}
-              </span>
-            </>
-          ) : (
-            <>
-              <UserRound className="size-3" />
-              Add members
-            </>
-          )}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-52">
-        <DropdownMenuLabel>Members</DropdownMenuLabel>
-        {members.map((member) => (
-          <DropdownMenuCheckboxItem
-            key={member.id}
-            checked={selected.includes(member.id)}
-            onCheckedChange={() => onToggle(member.id)}
-            onSelect={(event) => event.preventDefault()}
-          >
-            <span className="flex items-center gap-2">
-              <UserAvatar user={member} className="size-4" />
-              {member.name}
-            </span>
-          </DropdownMenuCheckboxItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function ProjectPicker({
-  projects,
-  project,
-  onSelect,
-  plain,
-}: {
-  projects: Project[];
-  project: Project | null;
-  onSelect: (id: string | null) => void;
-  plain?: boolean;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "flex items-center gap-1.5 text-xs",
-            plain
-              ? "hover:bg-accent rounded-sm px-1.5 py-0.5"
-              : "rounded-md border px-1.5 py-0.5",
-            !plain && project && "bg-muted border-transparent font-medium",
-          )}
-        >
-          <FolderOpen className="size-3" />
-          {project ? project.name : "Add project"}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuLabel>Project</DropdownMenuLabel>
-        <DropdownMenuItem onSelect={() => onSelect(null)}>No project</DropdownMenuItem>
-        {projects.map((item) => (
-          <DropdownMenuItem key={item.id} onSelect={() => onSelect(item.id)}>
-            {item.name}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
