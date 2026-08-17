@@ -17,6 +17,7 @@ export const PRIORITIES = [
 export type Priority = (typeof PRIORITIES)[number];
 
 export const BOARD_COLUMNS: { status: TaskStatus; label: string }[] = [
+  { status: "BACKLOG", label: "Backlog" },
   { status: "TODO", label: "To Do" },
   { status: "DOING", label: "Doing" },
   { status: "COMPLETED", label: "Completed" },

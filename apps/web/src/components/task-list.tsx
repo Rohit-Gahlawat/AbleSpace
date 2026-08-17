@@ -23,7 +23,13 @@ import { cn } from "@/lib/utils";
 import { STATUS_LABEL, type Task, type TaskStatus } from "@/lib/types";
 import type { FieldVisibility } from "@/hooks/use-task-view";
 
-export const LIST_GROUPS: TaskStatus[] = ["TODO", "DOING", "COMPLETED", "ON_HOLD"];
+export const LIST_GROUPS: TaskStatus[] = [
+  "BACKLOG",
+  "TODO",
+  "DOING",
+  "COMPLETED",
+  "ON_HOLD",
+];
 
 export function TaskList({
   tasks,
