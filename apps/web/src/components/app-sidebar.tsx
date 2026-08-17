@@ -3,13 +3,13 @@
 import {
   ChevronDown,
   ChevronsUpDown,
-  FolderKanban,
-  LayoutGrid,
+  GalleryVerticalEnd,
   Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+import { DashboardSquare } from "@/components/icons";
 import { ThemeMenuItems } from "@/components/theme-menu-items";
 import {
   Collapsible,
@@ -37,8 +37,8 @@ import {
 import type { User, Workspace } from "@/lib/types";
 
 const NAV_ITEMS = [
-  { href: "/tasks", label: "Tasks", icon: LayoutGrid },
-  { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/tasks", label: "Tasks", icon: DashboardSquare },
+  { href: "/projects", label: "Projects", icon: GalleryVerticalEnd },
 ];
 
 export function AppSidebar({

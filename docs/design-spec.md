@@ -115,14 +115,15 @@ Centred column on white:
 - **Sidebar (256px, #FAFAFA, 1px right border)**
   - Workspace switcher: avatar + **Dexter** + up/down chevron.
   - Group label **Workspace** with collapse chevron.
-  - Nav items: **Tasks** (grid icon), **Projects** (briefcase icon). Active item has a
-    subtle filled rounded background.
+  - Nav items: **Tasks** (`HugeIcon / dashboard-square-03`, 16px), **Projects**
+    (`Lucide / GalleryVerticalEnd`). Active item has a subtle filled rounded background.
   - Switcher opens the user menu: avatar, **Dexter**, `Dexter@gmail.com`, then
     **Change Theme ▸**, **Color Mode ▸**, **Settings**.
 - **Header**: sidebar-collapse icon button on the left; breadcrumb when nested
   (`Projects › Design Homepage`).
 - **Content header**: page title on the left; on the right — search icon, **Fields**
-  (columns icon), filter icon, and the primary **+ Add Task** / **+ Add Project** button.
+  (`Lucide / Columns3`), filter icon, and the primary **+ Add Task** / **+ Add Project**
+  button.
 
 ### 5.3 Tasks — List view
 Grouped, collapsible sections **To Do**, **Doing**, **Completed**, each rendered as a table:
@@ -212,6 +213,9 @@ Then section heading **Workspace access** and a card row
 - Frames are 1280 wide; the sidebar is a fixed 256px, so the content column is 1024px.
   Responsive behaviour below that width is not drawn — the sidebar collapses to the icon/off
   state via the header toggle, and tables become horizontally scrollable.
-- Export is disabled on the Figma file, so no assets could be pulled; icons are Lucide
-  (the shadcn default set) and avatars are placeholder images.
+- Export is disabled on the Figma file, so no assets could be pulled. Icon names were read
+  off the layer tree instead: the file is almost all Lucide (the shadcn default set) with
+  one Hugeicon, `dashboard-square-03`, on the Tasks nav item — that one is redrawn as a
+  local SVG in `components/icons.tsx` rather than pulling in a second icon library.
+  Avatars are placeholder images.
 - Deviations from the design are listed in the project README.

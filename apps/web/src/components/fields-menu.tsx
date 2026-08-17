@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGrid, List, Table2 } from "lucide-react";
+import { Columns3, LayoutGrid, List } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,7 +33,7 @@ export function FieldsMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm">
-          <Table2 />
+          <Columns3 />
           Fields
         </Button>
       </DropdownMenuTrigger>

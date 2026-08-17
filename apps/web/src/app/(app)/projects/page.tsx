@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Filter, MoreHorizontal, Plus, Search, UserRound, X } from "lucide-react";
+import {
+  Columns3,
+  Filter,
+  MoreHorizontal,
+  Plus,
+  Search,
+  UserRound,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
@@ -32,7 +40,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import {
@@ -147,7 +154,7 @@ export default function ProjectsPage() {
             )}
 
             <Button variant="outline" size="sm">
-              <Table2 />
+              <Columns3 />
               Fields
             </Button>
 
