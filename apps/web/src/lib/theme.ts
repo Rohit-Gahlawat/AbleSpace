@@ -17,13 +17,13 @@ export const DEFAULT_ACCENT: Accent = "black";
 export const THEME_STORAGE_KEY = "pyramid.theme";
 export const ACCENT_STORAGE_KEY = "pyramid.accent";
 
-export const ACCENT_SWATCH: Record<Accent, string | null> = {
+export const ACCENT_SWATCH: Record<Accent, string> = {
   amber: "oklch(0.666 0.179 58.318)",
   blue: "oklch(0.546 0.245 262.881)",
   pink: "oklch(0.592 0.249 0.584)",
   rose: "oklch(0.586 0.253 17.585)",
   emerald: "oklch(0.596 0.145 163.225)",
-  black: null,
+  black: "var(--accent-swatch-black)",
 };
 
 export const ACCENT_LABEL: Record<Accent, string> = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Moon, Palette, Sun } from "lucide-react";
+import { Check, Moon, Sun } from "lucide-react";
 
 import { useTheme } from "@/components/theme-provider";
 import {
@@ -42,7 +42,7 @@ export function ThemeMenuItems() {
 
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
-          <AccentSwatch accent={accent} fallback={<Palette />} />
+          <AccentSwatch accent={accent} />
           Color Mode
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
@@ -62,23 +62,11 @@ export function ThemeMenuItems() {
   );
 }
 
-function AccentSwatch({
-  accent,
-  fallback,
-}: {
-  accent: Accent;
-  fallback?: React.ReactNode;
-}) {
-  const color = ACCENT_SWATCH[accent];
-
-  if (!color) {
-    return fallback ?? <span className="size-4" aria-hidden />;
-  }
-
+function AccentSwatch({ accent }: { accent: Accent }) {
   return (
     <span
-      className="size-4 rounded-[4px]"
-      style={{ backgroundColor: color }}
+      className="ring-border size-4 rounded-[4px] ring-1"
+      style={{ backgroundColor: ACCENT_SWATCH[accent] }}
       aria-hidden
     />
   );

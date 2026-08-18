@@ -38,11 +38,8 @@ export default function ColorSettingsPage() {
             >
               <span
                 aria-hidden
-                className={cn(
-                  "size-4 shrink-0 rounded",
-                  swatch ? "" : "border border-dashed",
-                )}
-                style={swatch ? { backgroundColor: swatch } : undefined}
+                className="ring-border size-4 shrink-0 rounded ring-1"
+                style={{ backgroundColor: swatch }}
               />
               <span className="text-sm font-medium">{ACCENT_LABEL[option]}</span>
               {isActive && <Check className="ml-auto size-4 shrink-0" />}
