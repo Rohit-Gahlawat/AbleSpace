@@ -67,6 +67,13 @@ type Draft = {
   dueDate: string | null;
 };
 
+type SubtaskDraft = {
+  title: string;
+  priority: Priority;
+  assigneeIds: string[];
+  dueDate: string | null;
+};
+
 export default function NewTaskPage() {
   const router = useRouter();
   const params = useSearchParams();
@@ -79,7 +86,7 @@ export default function NewTaskPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const [subtasks, setSubtasks] = useState<string[]>([]);
+  const [subtasks, setSubtasks] = useState<SubtaskDraft[]>([]);
   const [subtaskDraft, setSubtaskDraft] = useState("");
 
   const [draft, setDraft] = useState<Draft>({
@@ -135,6 +142,17 @@ export default function NewTaskPage() {
     [labels, draft.labelIds],
   );
 
+  const fromProject = projectParam
+    ? (projects.find((item) => item.id === projectParam) ?? null)
+    : null;
+
+  const originHref = projectParam ? `/projects/${projectParam}` : "/tasks";
+  const originLabel = projectParam ? (fromProject?.name ?? "Project") : "Tasks";
+
+  const returnHref = projectParam
+    ? `/projects/${draft.projectId ?? projectParam}`
+    : "/tasks";
+
   const update = useCallback(
     <K extends keyof Draft>(key: K, value: Draft[K]) =>
       setDraft((current) => ({ ...current, [key]: value })),
@@ -151,6 +169,14 @@ export default function NewTaskPage() {
       })),
     [],
   );
+
+  function updateSubtask(index: number, patch: Partial<SubtaskDraft>) {
+    setSubtasks((current) =>
+      current.map((subtask, position) =>
+        position === index ? { ...subtask, ...patch } : subtask,
+      ),
+    );
+  }
 
   async function createTask() {
     if (!draft.title.trim()) {
@@ -175,14 +201,20 @@ export default function NewTaskPage() {
         }),
       });
 
-      for (const title of subtasks) {
+      for (const subtask of subtasks) {
         await api<Task>("/tasks", {
           method: "POST",
-          body: JSON.stringify({ title, parentId: created.id }),
+          body: JSON.stringify({
+            title: subtask.title,
+            priority: subtask.priority,
+            assigneeIds: subtask.assigneeIds,
+            dueDate: subtask.dueDate ?? undefined,
+            parentId: created.id,
+          }),
         });
       }
 
-      router.push("/tasks");
+      router.push(returnHref);
     } catch (error) {
       setSaving(false);
       toast.error(
@@ -193,7 +225,9 @@ export default function NewTaskPage() {
 
   return (
     <>
-      <AppHeader crumbs={[{ label: "Tasks", href: "/tasks" }, { label: "New Task" }]} />
+      <AppHeader
+        crumbs={[{ label: originLabel, href: originHref }, { label: "New Task" }]}
+      />
 
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div className="flex items-center justify-between gap-4">
@@ -201,10 +235,10 @@ export default function NewTaskPage() {
             variant="ghost"
             size="sm"
             className="gap-1.5"
-            onClick={() => router.push("/tasks")}
+            onClick={() => router.push(originHref)}
           >
             <ArrowLeft className="size-4" />
-            Back to Tasks
+            Back to {originLabel}
           </Button>
 
           <div className="flex items-center gap-1.5">
@@ -333,16 +367,44 @@ export default function NewTaskPage() {
               </CollapsibleTrigger>
 
               <CollapsibleContent className="flex flex-col gap-2">
-                {subtasks.map((title, index) => (
+                {subtasks.map((subtask, index) => (
                   <div
-                    key={`${title}-${index}`}
-                    className="flex items-center gap-2 rounded-lg border px-3 py-2"
+                    key={`${subtask.title}-${index}`}
+                    className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2"
                   >
-                    <Checkbox disabled aria-label={title} />
-                    <span className="flex-1 text-sm">{title}</span>
+                    <Checkbox disabled aria-label={subtask.title} />
+                    <span className="min-w-32 flex-1 text-sm">{subtask.title}</span>
+
+                    <PriorityPicker
+                      priority={subtask.priority}
+                      align="start"
+                      onSelect={(priority) =>
+                        updateSubtask(index, { priority })
+                      }
+                    />
+
+                    <MembersPicker
+                      members={members}
+                      selected={subtask.assigneeIds}
+                      onToggle={(id) =>
+                        updateSubtask(index, {
+                          assigneeIds: subtask.assigneeIds.includes(id)
+                            ? subtask.assigneeIds.filter((value) => value !== id)
+                            : [...subtask.assigneeIds, id],
+                        })
+                      }
+                      compact
+                    />
+
+                    <DateChip
+                      value={subtask.dueDate}
+                      placeholder="Due date"
+                      onSelect={(dueDate) => updateSubtask(index, { dueDate })}
+                    />
+
                     <button
                       type="button"
-                      aria-label={`Remove ${title}`}
+                      aria-label={`Remove ${subtask.title}`}
                       onClick={() =>
                         setSubtasks((current) =>
                           current.filter((_, position) => position !== index),
@@ -361,7 +423,15 @@ export default function NewTaskPage() {
                     event.preventDefault();
                     const value = subtaskDraft.trim();
                     if (!value) return;
-                    setSubtasks((current) => [...current, value]);
+                    setSubtasks((current) => [
+                      ...current,
+                      {
+                        title: value,
+                        priority: "NO_PRIORITY",
+                        assigneeIds: [],
+                        dueDate: null,
+                      },
+                    ]);
                     setSubtaskDraft("");
                   }}
                 >
