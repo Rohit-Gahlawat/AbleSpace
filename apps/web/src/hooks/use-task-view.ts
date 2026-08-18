@@ -7,6 +7,7 @@ import {
   subscribeToStorage,
   writeStored,
 } from "@/lib/client-storage";
+import { BOARD_COLUMNS, isTaskStatus, type TaskStatus } from "@/lib/types";
 
 export const TASK_VIEWS = ["list", "board"] as const;
 export type TaskView = (typeof TASK_VIEWS)[number];
@@ -53,9 +54,27 @@ const DEFAULT_FIELDS: Record<TaskView, FieldVisibility> = {
 
 const VIEW_KEY = "pyramid.taskView";
 const FIELDS_KEY = "pyramid.taskFields";
+const COLUMNS_KEY = "pyramid.boardColumns";
+
+const DEFAULT_COLUMN_ORDER = BOARD_COLUMNS.map((column) => column.status);
 
 function isView(value: unknown): value is TaskView {
   return typeof value === "string" && (TASK_VIEWS as readonly string[]).includes(value);
+}
+
+function parseColumnOrder(raw: string | null): TaskStatus[] {
+  if (!raw) return DEFAULT_COLUMN_ORDER;
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return DEFAULT_COLUMN_ORDER;
+
+    const stored = parsed.filter(isTaskStatus);
+    const missing = DEFAULT_COLUMN_ORDER.filter((status) => !stored.includes(status));
+    return [...stored, ...missing];
+  } catch {
+    return DEFAULT_COLUMN_ORDER;
+  }
 }
 
 function parseFields(raw: string | null): Record<TaskView, FieldVisibility> {
@@ -87,11 +106,25 @@ export function useTaskView() {
     () => null,
   );
 
+  const storedColumns = useSyncExternalStore(
+    subscribeToStorage,
+    () => readStored(COLUMNS_KEY),
+    () => null,
+  );
+
   const view: TaskView = isView(storedView) ? storedView : "list";
   const fieldsByView = useMemo(() => parseFields(storedFields), [storedFields]);
+  const columnOrder = useMemo(
+    () => parseColumnOrder(storedColumns),
+    [storedColumns],
+  );
 
   const setView = useCallback((next: TaskView) => {
     writeStored(VIEW_KEY, next);
+  }, []);
+
+  const setColumnOrder = useCallback((next: TaskStatus[]) => {
+    writeStored(COLUMNS_KEY, JSON.stringify(next));
   }, []);
 
   const toggleField = useCallback(
@@ -105,5 +138,12 @@ export function useTaskView() {
     [fieldsByView, view],
   );
 
-  return { view, setView, fields: fieldsByView[view], toggleField };
+  return {
+    view,
+    setView,
+    fields: fieldsByView[view],
+    toggleField,
+    columnOrder,
+    setColumnOrder,
+  };
 }

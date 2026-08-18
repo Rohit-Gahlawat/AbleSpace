@@ -266,6 +266,27 @@
       transform var(--dur-long) var(--ease-out);
   }
 
+  [data-board-scroller] {
+    scrollbar-width: thin;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [data-board-scroller][data-panning="true"] {
+    cursor: grabbing;
+    scroll-behavior: auto;
+    user-select: none;
+  }
+
+  [data-board-scroller][data-dragging="true"] [data-board-column] {
+    will-change: transform;
+  }
+
+  [data-board-column][data-lifted="true"] {
+    position: relative;
+    z-index: 20;
+  }
+
   [data-slot="table"] tbody tr {
     transition: background-color var(--dur-micro) var(--ease-out);
   }

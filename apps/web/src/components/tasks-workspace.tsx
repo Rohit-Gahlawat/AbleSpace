@@ -30,7 +30,8 @@ export function TasksWorkspace({
   projectId?: string;
 }) {
   const router = useRouter();
-  const { view, setView, fields, toggleField } = useTaskView();
+  const { view, setView, fields, toggleField, columnOrder, setColumnOrder } =
+    useTaskView();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<User[]>([]);
@@ -279,6 +280,8 @@ export function TasksWorkspace({
         <TaskBoard
           tasks={visibleTasks}
           fields={fields}
+          columnOrder={columnOrder}
+          onReorderColumns={setColumnOrder}
           onAddTask={(status) => addTask(status)}
           onMoveTask={(taskId, status, position) => void moveTask(taskId, status, position)}
           onDeleteTask={(taskId) => void deleteTask(taskId)}
