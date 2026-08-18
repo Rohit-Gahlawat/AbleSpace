@@ -2,15 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { GripVertical, MoreHorizontal, Plus } from "lucide-react";
+import { GripVertical, MoreHorizontal, Plus, UserRound } from "lucide-react";
 
 import { PriorityIcon } from "@/components/priority-badge";
 import { RowActionsMenu } from "@/components/row-actions-menu";
-import { DueDateChip, LabelChips } from "@/components/task-meta";
-import { UserAvatar } from "@/components/user-avatar";
+import { STATUS_DOT } from "@/components/task-fields";
+import { DueDateChip, LabelChips, MemberAvatars } from "@/components/task-meta";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BOARD_COLUMNS, type Task, type TaskStatus } from "@/lib/types";
+import {
+  BOARD_COLUMNS,
+  STATUS_LABEL,
+  type Task,
+  type TaskStatus,
+} from "@/lib/types";
 import type { FieldVisibility } from "@/hooks/use-task-view";
 
 export function TaskBoard({
@@ -221,8 +226,6 @@ function TaskCard({
   onDragOver: (half: "top" | "bottom") => void;
   onDelete: () => void;
 }) {
-  const assignee = task.assignees[0];
-
   return (
     <article
       draggable
@@ -261,17 +264,36 @@ function TaskCard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
           {fields.priority && <PriorityIcon priority={task.priority} />}
-          {fields.members && assignee && (
+          {fields.members && task.assignees.length > 0 && (
             <>
-              <UserAvatar user={assignee} />
-              <span className="truncate text-xs font-semibold">
-                {assignee.name}
-              </span>
+              <MemberAvatars members={task.assignees} max={3} />
+              {task.assignees.length === 1 && (
+                <span className="truncate text-xs font-semibold">
+                  {task.assignees[0].name}
+                </span>
+              )}
             </>
           )}
         </div>
         {fields.dueDate && task.dueDate && <DueDateChip date={task.dueDate} />}
       </div>
+
+      {(fields.status || fields.reporter) && (
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {fields.status && (
+            <span className="flex items-center gap-1.5">
+              <span className={cn("size-2 rounded-full", STATUS_DOT[task.status])} />
+              {STATUS_LABEL[task.status]}
+            </span>
+          )}
+          {fields.reporter && (
+            <span className="flex items-center gap-1">
+              <UserRound className="size-3" />
+              {task.reporter?.name ?? "—"}
+            </span>
+          )}
+        </div>
+      )}
 
       {fields.labels && task.labels.length > 0 && (
         <LabelChips labels={task.labels} max={2} />
