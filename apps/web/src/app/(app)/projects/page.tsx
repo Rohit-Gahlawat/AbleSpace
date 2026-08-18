@@ -128,7 +128,7 @@ export default function ProjectsPage() {
 
           <div className="flex shrink-0 items-center gap-1.5">
             {searchOpen ? (
-              <div className="relative w-56">
+              <div className="animate-in fade-in slide-in-from-right-4 relative w-56 duration-200 ease-out">
                 <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
                 <Input
                   ref={searchRef}
@@ -199,7 +199,7 @@ export default function ProjectsPage() {
         {loading ? (
           <Skeleton className="h-48 w-full rounded-lg" />
         ) : (
-          <div className="bg-muted/30 overflow-hidden rounded-lg border">
+          <div className="bg-muted/30 animate-in fade-in overflow-hidden rounded-lg border duration-300 ease-out">
             <ul className="divide-y md:hidden">
               {visibleProjects.map((project) => (
                 <li key={project.id}>

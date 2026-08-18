@@ -56,7 +56,7 @@ export function TaskList({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="animate-in fade-in flex flex-col gap-4 duration-300 ease-out">
       {groups.map((group) => (
         <TaskGroup
           key={group.status}

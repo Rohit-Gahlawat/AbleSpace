@@ -317,7 +317,7 @@ export function TaskBoard({
       onPointerUp={endPan}
       onPointerCancel={endPan}
       onWheel={slideOnWheel}
-      className="flex min-w-0 flex-1 items-start gap-3 overflow-x-auto pb-2"
+      className="animate-in fade-in flex min-w-0 flex-1 items-start gap-3 overflow-x-auto pb-2 duration-300 ease-out"
     >
       {columns.map((column, index) => (
         <BoardColumn

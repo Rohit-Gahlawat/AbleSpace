@@ -251,21 +251,70 @@
   }
 }
 
-@layer components {
-  [data-slot="dropdown-menu-content"],
-  [data-slot="popover-content"],
-  [data-slot="select-content"],
-  [data-slot="tooltip-content"] {
-    transition:
-      opacity var(--dur-short) var(--ease-out),
-      transform var(--dur-short) var(--ease-out);
+@keyframes collapsible-open {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes collapsible-close {
+  from {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  [data-slot="collapsible-content"] {
+    overflow: hidden;
   }
 
-  [data-slot="dialog-content"],
-  [data-slot="sheet-content"] {
-    transition:
-      opacity var(--dur-long) var(--ease-out),
-      transform var(--dur-long) var(--ease-out);
+  [data-slot="collapsible-content"][data-state="open"] {
+    animation: collapsible-open var(--dur-short) var(--ease-out);
+  }
+
+  [data-slot="collapsible-content"][data-state="closed"] {
+    animation: collapsible-close var(--dur-short) var(--ease-in-out);
+  }
+
+  [data-slot="dropdown-menu-content"][data-state],
+  [data-slot="dropdown-menu-sub-content"][data-state],
+  [data-slot="popover-content"][data-state],
+  [data-slot="select-content"][data-state],
+  [data-slot="tooltip-content"][data-state] {
+    animation-duration: var(--dur-short);
+    animation-timing-function: var(--ease-out);
+  }
+
+  [data-slot="dialog-content"][data-state],
+  [data-slot="dialog-overlay"][data-state],
+  [data-slot="sheet-content"][data-state],
+  [data-slot="sheet-overlay"][data-state] {
+    animation-duration: var(--dur-long);
+    animation-timing-function: var(--ease-out);
+  }
+
+  [data-slot="sidebar-gap"][class],
+  [data-slot="sidebar-container"][class],
+  [data-slot="sidebar-group-label"][class],
+  [data-slot="sidebar-inset"][class] {
+    transition-timing-function: var(--ease-out);
+    transition-duration: var(--dur-short);
+  }
+}
+
+@layer components {
+  [data-slot="table"] tbody tr {
+    transition: background-color var(--dur-micro) var(--ease-out);
   }
 
   [data-board-scroller] {
@@ -292,10 +341,6 @@
   [data-board-column][data-lifted="true"] {
     position: relative;
     z-index: 20;
-  }
-
-  [data-slot="table"] tbody tr {
-    transition: background-color var(--dur-micro) var(--ease-out);
   }
 }
 

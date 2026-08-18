@@ -201,7 +201,7 @@ export function TasksWorkspace({
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           {searchOpen ? (
-            <div className="relative w-56 sm:w-72">
+            <div className="animate-in fade-in slide-in-from-right-4 relative w-56 duration-200 ease-out sm:w-72">
               <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
               <Input
                 ref={searchRef}
