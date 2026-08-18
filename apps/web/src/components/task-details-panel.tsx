@@ -1,57 +1,93 @@
 "use client";
 
+import { useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
   Circle,
+  FolderOpen,
   Plus,
   Settings2,
   SignalHigh,
   Tag,
   UserRound,
-  UserRoundPlus,
   Users,
 } from "lucide-react";
 
 import { PriorityIcon } from "@/components/priority-badge";
 import {
   DateChip,
+  MembersPicker,
   PriorityPicker,
+  ProjectPicker,
   StatusPicker,
 } from "@/components/task-fields";
-import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   PRIORITY_LABEL,
   STATUS_LABEL,
   type Activity,
   type Priority,
+  type Project,
   type Task,
   type TaskStatus,
+  type User,
 } from "@/lib/types";
 
 export function TaskDetailsPanel({
   task,
   activity,
+  members,
+  projects,
   onChangeStatus,
   onChangePriority,
   onChangeDates,
+  onToggleMember,
+  onChangeProject,
 }: {
   task: Task;
   activity: Activity[];
+  members: User[];
+  projects: Project[];
   onChangeStatus: (status: TaskStatus) => void;
   onChangePriority: (priority: Priority) => void;
   onChangeDates: (dates: { startDate?: string | null; dueDate?: string | null }) => void;
+  onToggleMember: (userId: string) => void;
+  onChangeProject: (projectId: string | null) => void;
 }) {
+  const [projectAdded, setProjectAdded] = useState(false);
+  const showProject = projectAdded || Boolean(task.project);
+
   return (
     <div className="flex w-full flex-col gap-4 lg:w-80">
       <section className="rounded-lg border">
         <header className="flex items-center justify-between border-b px-3 py-2">
           <h2 className="text-sm font-medium">Details</h2>
           <div className="flex items-center">
-            <Button variant="ghost" size="icon-sm" aria-label="Add property">
-              <Plus />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm" aria-label="Add property">
+                  <Plus />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuLabel>Add property</DropdownMenuLabel>
+                <DropdownMenuItem
+                  disabled={showProject}
+                  onSelect={() => setProjectAdded(true)}
+                >
+                  <FolderOpen />
+                  Project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="ghost" size="icon-sm" aria-label="Configure fields">
               <Settings2 />
             </Button>
@@ -67,22 +103,26 @@ export function TaskDetailsPanel({
             <PriorityPicker priority={task.priority} onSelect={onChangePriority} />
           </DetailRow>
 
+          {showProject && (
+            <DetailRow icon={<FolderOpen className="size-3.5" />} label="Project">
+              <ProjectPicker
+                projects={projects}
+                project={task.project}
+                onSelect={onChangeProject}
+                align="end"
+                plain
+              />
+            </DetailRow>
+          )}
+
           <DetailRow icon={<UserRound className="size-3.5" />} label="Members">
-            {task.assignees.length > 0 ? (
-              <div className="flex items-center gap-1.5 px-1.5">
-                {task.assignees.map((member) => (
-                  <UserAvatar key={member.id} user={member} />
-                ))}
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="hover:bg-accent flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"
-              >
-                <UserRoundPlus className="size-3.5" />
-                Add members
-              </button>
-            )}
+            <MembersPicker
+              members={members}
+              selected={task.assignees.map((member) => member.id)}
+              onToggle={onToggleMember}
+              align="end"
+              plain
+            />
           </DetailRow>
 
           <DetailRow icon={<CalendarDays className="size-3.5" />} label="Dates">
@@ -90,12 +130,14 @@ export function TaskDetailsPanel({
               <DateChip
                 value={task.startDate}
                 placeholder="Start"
+                withYear={false}
                 onSelect={(date) => onChangeDates({ startDate: date })}
               />
               <ArrowRight className="text-muted-foreground size-3" />
               <DateChip
                 value={task.dueDate}
                 placeholder="End"
+                withYear={false}
                 onSelect={(date) => onChangeDates({ dueDate: date })}
               />
             </div>
@@ -154,7 +196,6 @@ export function TaskDetailsPanel({
     </div>
   );
 }
-
 
 
 function DetailRow({
