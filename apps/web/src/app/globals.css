@@ -274,6 +274,11 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  [data-board-column] a,
+  [data-board-column] button {
+    cursor: pointer;
+  }
+
   [data-board-scroller][data-panning="true"] {
     cursor: grabbing;
     scroll-behavior: auto;

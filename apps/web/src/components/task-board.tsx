@@ -611,10 +611,10 @@ function TaskCard({
         "active:cursor-grabbing",
       )}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between">
         <Link
           href={`/tasks/${task.id}`}
-          className="text-sm font-medium hover:underline"
+          className="min-w-0 flex-1 pr-2 text-sm font-medium hover:underline"
         >
           {task.title}
         </Link>
