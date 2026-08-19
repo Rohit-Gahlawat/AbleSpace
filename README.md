@@ -135,9 +135,9 @@ are set by hand:
 | `DATABASE_URL` | connection string of the hosted Postgres |
 | `CORS_ORIGINS` | the deployed web origin, e.g. `https://pyramid.vercel.app` |
 
-**Web (Vercel)** — import the repo and set **Root Directory** to `apps/web`. Vercel then detects
-Next.js and its own defaults are correct, so leave the build, output and install commands alone.
-One variable:
+**Web (Vercel)** — import the repo and set **Root Directory** to `apps/web`. `apps/web/vercel.json`
+pins the framework and build command from there, so nothing needs changing in the dashboard's
+build settings. One variable:
 
 | Variable | Value |
 |----------|-------|
