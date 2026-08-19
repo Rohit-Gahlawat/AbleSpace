@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: pyramid-api
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: npm install --include=dev && npm run build --workspace apps/api
+    startCommand: npm run prisma:deploy --workspace apps/api && npm run start:prod --workspace apps/api
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 30d
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
