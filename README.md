@@ -135,12 +135,17 @@ are set by hand:
 | `DATABASE_URL` | connection string of the hosted Postgres |
 | `CORS_ORIGINS` | the deployed web origin, e.g. `https://pyramid.vercel.app` |
 
-**Web (Vercel)** — import the repo with the project root left at the repository root;
-`vercel.json` handles the workspace build. One variable:
+**Web (Vercel)** — import the repo and set **Root Directory** to `apps/web`. Vercel then detects
+Next.js and its own defaults are correct, so leave the build, output and install commands alone.
+One variable:
 
 | Variable | Value |
 |----------|-------|
 | `NEXT_PUBLIC_API_URL` | the deployed API origin plus `/api` |
+
+Vercel pre-fills that variable from `apps/web/.env.example`, which points at localhost. Replace
+the value with the deployed API URL — otherwise the site loads but every request fails, because
+the browser tries to reach the visitor's own machine.
 
 The API sets an httpOnly session cookie, but the two apps sit on different hosts and browsers
 increasingly refuse third-party cookies, so the token is also sent as a bearer header. The API
