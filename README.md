@@ -4,7 +4,7 @@ A task management system built from the provided Figma design — a task list an
 task detail with subtasks and comments, projects, settings, guest login, and a theme system
 that survives a refresh.
 
-**Live demo:** _add URL after deploying_
+**Live demo:** https://able-space-api.vercel.app
 
 ## Stack
 
@@ -22,11 +22,57 @@ being copied by eye.
 ## Layout
 
 ```
-apps/
-  web/    Next.js frontend
-  api/    NestJS backend + Prisma schema
-docs/
-  design-spec.md   Everything read off the Figma file: frames, tokens, per-screen breakdown
+.
+├── apps
+│   ├── api                                  NestJS backend
+│   │   ├── prisma
+│   │   │   ├── migrations/                  schema history, applied on deploy
+│   │   │   └── schema.prisma                10 models + 2 enums
+│   │   ├── src
+│   │   │   ├── auth/                        guest login, profile, session cookie
+│   │   │   ├── tasks/                       list, create, update, move, delete
+│   │   │   ├── projects/                    project CRUD
+│   │   │   ├── comments/                    nested under a task
+│   │   │   ├── labels/                      read-only lookup
+│   │   │   ├── members/                     read-only lookup
+│   │   │   ├── workspaces/                  seeds a new guest workspace
+│   │   │   ├── prisma/                      shared database client
+│   │   │   ├── common/                      session guard, decorators, types
+│   │   │   └── main.ts                      bootstrap, CORS, validation pipe
+│   │   └── prisma.config.ts
+│   │
+│   └── web                                  Next.js frontend
+│       ├── src
+│       │   ├── app
+│       │   │   ├── (auth)/login/            login screen
+│       │   │   ├── (app)/                   sidebar shell
+│       │   │   │   ├── tasks/               board + list, detail, new
+│       │   │   │   └── projects/            list, detail, new
+│       │   │   ├── (settings)/settings/     profile, theme, colour
+│       │   │   ├── layout.tsx               fonts, theme script, toaster
+│       │   │   └── globals.css              design tokens, accents, motion
+│       │   ├── components
+│       │   │   ├── tasks-workspace.tsx      shared brain for both boards
+│       │   │   ├── task-board.tsx           kanban, drag and drop, springs
+│       │   │   ├── task-list.tsx            grouped table view
+│       │   │   ├── task-fields.tsx          shared status/priority/member pickers
+│       │   │   ├── task-details-panel.tsx   detail sidebar and updates feed
+│       │   │   ├── row-actions-menu.tsx     shared edit/delete menu
+│       │   │   ├── filter-menu.tsx          fields-menu.tsx, task-meta.tsx, …
+│       │   │   └── ui/                      shadcn primitives
+│       │   ├── hooks/                       use-task-view, use-mobile
+│       │   └── lib
+│       │       ├── api.ts                   fetch wrapper, token handling
+│       │       ├── spring.ts                spring physics used by the board
+│       │       ├── theme.ts                 theme + accent definitions
+│       │       ├── client-storage.ts        subscribable localStorage
+│       │       └── types.ts                 shared API types
+│       └── vercel.json
+│
+├── docs
+│   └── design-spec.md                       everything read off the Figma file
+├── render.yaml                              API service definition
+└── package.json                             npm workspaces root
 ```
 
 ## Running locally
