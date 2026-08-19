@@ -28,9 +28,24 @@ const LABELS = [
 ] as const;
 
 const PROJECTS = [
-  { name: 'Design Homepage', priority: Priority.HIGH, dueDate: '2026-09-12', lead: 'Designer' },
-  { name: 'Develop Login Feature', priority: Priority.LOW, dueDate: '2026-09-15', lead: 'Chris Nolan' },
-  { name: 'Test Payment Gateway', priority: Priority.MEDIUM, dueDate: '2026-09-18', lead: 'QA Team' },
+  {
+    name: 'Design Homepage',
+    priority: Priority.HIGH,
+    dueDate: '2026-09-12',
+    lead: 'Designer',
+  },
+  {
+    name: 'Develop Login Feature',
+    priority: Priority.LOW,
+    dueDate: '2026-09-15',
+    lead: 'Chris Nolan',
+  },
+  {
+    name: 'Test Payment Gateway',
+    priority: Priority.MEDIUM,
+    dueDate: '2026-09-18',
+    lead: 'QA Team',
+  },
 ] as const;
 
 type SeedTask = {
@@ -158,9 +173,24 @@ const TASKS: SeedTask[] = [
 ];
 
 const SUBTASKS = [
-  { title: 'Subtask 1', priority: Priority.HIGH, dueDate: '2026-09-12', assignee: 'Designer' },
-  { title: 'Subtask 2', priority: Priority.LOW, dueDate: '2026-09-15', assignee: 'Chris Nolan' },
-  { title: 'Subtask 3', priority: Priority.MEDIUM, dueDate: '2026-09-18', assignee: 'Admin' },
+  {
+    title: 'Subtask 1',
+    priority: Priority.HIGH,
+    dueDate: '2026-09-12',
+    assignee: 'Designer',
+  },
+  {
+    title: 'Subtask 2',
+    priority: Priority.LOW,
+    dueDate: '2026-09-15',
+    assignee: 'Chris Nolan',
+  },
+  {
+    title: 'Subtask 3',
+    priority: Priority.MEDIUM,
+    dueDate: '2026-09-18',
+    assignee: 'Admin',
+  },
 ] as const;
 
 @Injectable()
@@ -170,126 +200,136 @@ export class WorkspaceProvisioningService {
   async provisionGuestWorkspace() {
     const suffix = randomBytes(4).toString('hex');
 
-    return this.prisma.$transaction(async (tx) => {
-      const workspace = await tx.workspace.create({
-        data: { name: 'Workspace', slug: `workspace-${suffix}` },
-      });
+    return this.prisma.$transaction(
+      async (tx) => {
+        const workspace = await tx.workspace.create({
+          data: { name: 'Workspace', slug: `workspace-${suffix}` },
+        });
 
-      const owner = await tx.user.create({
-        data: {
-          email: `dexter.${suffix}@pyramid.app`,
-          name: 'Dexter',
-          username: `dexuser-${suffix}`,
-          title: 'Designer',
-          isGuest: true,
-          memberships: { create: { workspaceId: workspace.id } },
-        },
-      });
-
-      const teammates = new Map<string, string>();
-      for (const teammate of TEAMMATES) {
-        const user = await tx.user.create({
+        const owner = await tx.user.create({
           data: {
-            email: `${teammate.username}.${suffix}@pyramid.app`,
-            name: teammate.name,
-            username: `${teammate.username}-${suffix}`,
-            title: teammate.title,
+            email: `dexter.${suffix}@pyramid.app`,
+            name: 'Dexter',
+            username: `dexuser-${suffix}`,
+            title: 'Designer',
+            isGuest: true,
             memberships: { create: { workspaceId: workspace.id } },
           },
         });
-        teammates.set(teammate.name, user.id);
-      }
 
-      const labels = new Map<string, string>();
-      for (const name of LABELS) {
-        const label = await tx.label.create({
-          data: { workspaceId: workspace.id, name },
-        });
-        labels.set(name, label.id);
-      }
-
-      const projects = new Map<string, string>();
-      for (const [index, project] of PROJECTS.entries()) {
-        const created = await tx.project.create({
-          data: {
-            workspaceId: workspace.id,
-            name: project.name,
-            priority: project.priority,
-            dueDate: new Date(project.dueDate),
-            leadId: teammates.get(project.lead),
-            position: index,
-          },
-        });
-        projects.set(project.name, created.id);
-      }
-
-      const positions = new Map<TaskStatus, number>();
-      let documentationTaskId: string | null = null;
-
-      for (const task of TASKS) {
-        const position = positions.get(task.status) ?? 0;
-        positions.set(task.status, position + 1);
-
-        const created = await tx.task.create({
-          data: {
-            workspaceId: workspace.id,
-            projectId: task.project ? projects.get(task.project) : null,
-            title: task.title,
-            description: task.description,
-            status: task.status,
-            priority: task.priority,
-            dueDate: new Date(task.dueDate),
-            reporterId: owner.id,
-            position,
-            assignees: { create: { userId: teammates.get(task.assignee)! } },
-            labels: {
-              create: task.labels.map((name) => ({ labelId: labels.get(name)! })),
+        const teammates = new Map<string, string>();
+        for (const teammate of TEAMMATES) {
+          const user = await tx.user.create({
+            data: {
+              email: `${teammate.username}.${suffix}@pyramid.app`,
+              name: teammate.name,
+              username: `${teammate.username}-${suffix}`,
+              title: teammate.title,
+              memberships: { create: { workspaceId: workspace.id } },
             },
-          },
-        });
-
-        if (task.title === 'Write API Documentation') {
-          documentationTaskId = created.id;
+          });
+          teammates.set(teammate.name, user.id);
         }
-      }
 
-      if (documentationTaskId) {
-        for (const [index, subtask] of SUBTASKS.entries()) {
-          await tx.task.create({
+        const labels = new Map<string, string>();
+        for (const name of LABELS) {
+          const label = await tx.label.create({
+            data: { workspaceId: workspace.id, name },
+          });
+          labels.set(name, label.id);
+        }
+
+        const projects = new Map<string, string>();
+        for (const [index, project] of PROJECTS.entries()) {
+          const created = await tx.project.create({
             data: {
               workspaceId: workspace.id,
-              parentId: documentationTaskId,
-              title: subtask.title,
-              status: TaskStatus.TODO,
-              priority: subtask.priority,
-              dueDate: new Date(subtask.dueDate),
-              reporterId: owner.id,
+              name: project.name,
+              priority: project.priority,
+              dueDate: new Date(project.dueDate),
+              leadId: teammates.get(project.lead),
               position: index,
-              assignees: { create: { userId: teammates.get(subtask.assignee)! } },
+            },
+          });
+          projects.set(project.name, created.id);
+        }
+
+        const positions = new Map<TaskStatus, number>();
+        let documentationTaskId: string | null = null;
+
+        for (const task of TASKS) {
+          const position = positions.get(task.status) ?? 0;
+          positions.set(task.status, position + 1);
+
+          const created = await tx.task.create({
+            data: {
+              workspaceId: workspace.id,
+              projectId: task.project ? projects.get(task.project) : null,
+              title: task.title,
+              description: task.description,
+              status: task.status,
+              priority: task.priority,
+              dueDate: new Date(task.dueDate),
+              reporterId: owner.id,
+              position,
+              assignees: { create: { userId: teammates.get(task.assignee)! } },
+              labels: {
+                create: task.labels.map((name) => ({
+                  labelId: labels.get(name)!,
+                })),
+              },
+            },
+          });
+
+          if (task.title === 'Write API Documentation') {
+            documentationTaskId = created.id;
+          }
+        }
+
+        if (documentationTaskId) {
+          for (const [index, subtask] of SUBTASKS.entries()) {
+            await tx.task.create({
+              data: {
+                workspaceId: workspace.id,
+                parentId: documentationTaskId,
+                title: subtask.title,
+                status: TaskStatus.TODO,
+                priority: subtask.priority,
+                dueDate: new Date(subtask.dueDate),
+                reporterId: owner.id,
+                position: index,
+                assignees: {
+                  create: { userId: teammates.get(subtask.assignee)! },
+                },
+              },
+            });
+          }
+
+          await tx.comment.create({
+            data: {
+              taskId: documentationTaskId,
+              authorId: teammates.get('Ankit Dutta')!,
+              body: 'Starting on the endpoint reference today, will share a draft shortly.',
+            },
+          });
+
+          await tx.activity.create({
+            data: {
+              taskId: documentationTaskId,
+              actorId: owner.id,
+              field: 'priority',
+              fromValue: Priority.NO_PRIORITY,
+              toValue: Priority.HIGH,
             },
           });
         }
 
-        await tx.comment.create({
-          data: {
-            taskId: documentationTaskId,
-            authorId: teammates.get('Ankit Dutta')!,
-            body: 'Starting on the endpoint reference today, will share a draft shortly.',
-          },
-        });
-
-        await tx.activity.create({
-          data: {
-            taskId: documentationTaskId,
-            actorId: owner.id,
-            field: 'priority',
-            fromValue: Priority.NO_PRIORITY,
-            toValue: Priority.HIGH,
-          },
-        });
-      }
-
-      return { workspace, owner };
-    });
+        return { workspace, owner };
+      },
+      {
+        maxWait: 15000,
+        timeout: 60000,
+      },
+    );
   }
 }
